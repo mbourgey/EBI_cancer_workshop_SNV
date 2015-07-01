@@ -76,8 +76,7 @@ Let's first explore the fastq file.
 
 Try these commands
 
-```
-{.bash}
+```{.bash}
 zless -S raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz
 
 ```
@@ -87,8 +86,7 @@ zless -S raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz
 
 Now try these commands:
 
-```
-{.bash}
+```{.bash}
 zcat raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz | head -n4
 zcat raw_reads/normal/runD0YR4ACXX_1/normal.64.pair2.fastq.gz | head -n4
 ```
@@ -99,7 +97,7 @@ zcat raw_reads/normal/runD0YR4ACXX_1/normal.64.pair2.fastq.gz | head -n4
 
 You could also just count the reads
 
-```
+```{.bash}
 zgrep -c "^@SRR" raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair1.fastq.gz
 ```
 
@@ -107,7 +105,7 @@ We should obtain 15546 reads
 
 **Why shouldn't you just do ?** 
 
-```
+```{.bash}
 zgrep -c "^@" raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair1.fastq.gz
 ```
 
