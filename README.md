@@ -1,11 +1,15 @@
 
-# Introduction to DNA-Seq processing
+# Introduction to DNA-Seq processing for cancer data
 ***By Mathieu Bourgey, Ph.D***
 
-In this workshop, we will present the main steps that are commonly used to process and to analyze sequencing data. We will focus only on whole genome data and provide command lines that allow detecting Single Nucleotide Variants (SNV), for a question of time we will only present the rational for the detection of Structural Variant (SV including CNV). This workshop will show you how to launch individual steps of a complete DNA-Seq pipeline
+In this workshop, we will present the main steps that are commonly used to process and to analyze cancer sequencing data. We will focus only on whole genome data and provide command lines that allow detecting Single Nucleotide Variants (SNV). This workshop will show you how to launch individual steps of a complete DNA-Seq SNV pipeline using cancer data
 
-We will be working on a 1000 genome sample, NA12878. You can find the whole raw data on the 1000 genome website:
-http://www.1000genomes.org/data
+
+## Data Source
+We will be working on a CageKid sample pair, patient C0098.
+The CageKid project is part of ICGC and is focused on renal cancer in many of it's forms.
+The raw data can be found on EGA and calls, RNA and DNA, can be found on the ICGC portal. 
+For more details about [CageKid](http://www.cng.fr/cagekid/)
 
 For practical reasons we subsampled the reads from the sample because running the whole dataset would take way too much time and resources.
 
@@ -17,33 +21,40 @@ The initial structure of your folders should look like this:
 ```
 <ROOT>
 |-- raw_reads/               # fastqs from the center (down sampled)
-    `-- NA12878              # One sample directory
-        |-- runERR_1         # Lane directory by run number. Contains the fastqs
-        `-- runSRR_1         # Lane directory by run number. Contains the fastqs
+    `-- normal               # The blood sample directory
+        `-- run*_?           # Lane directory by run number. Contains the fastqs
+    `-- tumor                # The tumor sample directory
+        `-- run*_?           # Lane directory by run number. Contains the fastqs
+`-- project.nanuq.csv        # sample sheet
 ```
 
+
 ### Cheat file
-* You can find all the unix command lines of this practical in the file: commands.sh
+* You can find all the unix command lines of this practical in the file: [commands.sh](scripts/commands.sh)
+
 
 
 ### Environment setup
 ```
-export PICARD_JAR=/usr/local/bin/picard.jar 
-export SNPEFF_HOME=/usr/local/src/snpEff/  
-export GATK_JAR=/usr/local/bin/GenomeAnalysisTK.jar
-export BVATOOLS_JAR=/usr/local/bin/bvatools-1.4-full.jar 
-export TRIMMOMATIC_JAR=/usr/local/bin/trimmomatic-0.33.jar 
-export REF=/home/mBourgey/kyoto_workshop_WGS_2015/references/ 
+{.bash}
+export APP_ROOT=/home/training/Applications/
+export PATH=$PATH:$APP_ROOT/bwa-0.7.9a:$APP_ROOT/tabix-0.2.6/:$APP_ROOT/IGVTools
+export PICARD_HOME=$APP_ROOT/picard-tools-1.115/
+export SNPEFF_HOME=$APP_ROOT/snpEff/
+export GATK_JAR=$APP_ROOT/gatk/GenomeAnalysisTK.jar
+export BVATOOLS_JAR=$APP_ROOT/bvatools-1.3/bvatools-1.3-full.jar
+export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.32/trimmomatic-0.32.jar
+export STRELKA_HOME=$APP_ROOT/strelka-1.0.13/
+export MUTECT_JAR=$APP_ROOT/muTect-1.1.4-bin/muTect-1.1.4.jar
+export REF=/home/training/ebiCancerWorkshop201407/references/
 
-cd $HOME 
-rsync -avP /home/mBourgey/cleanCopy/ $HOME/workshop 
-cd $HOME/workshop/ 
+cd $HOME/ebiCancerWorkshop201407
 ```
 
 ### Software requirements
 These are all already installed, but here are the original links.
 
-  * [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
+  * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
   * [BVATools](https://bitbucket.org/mugqic/bvatools/downloads)
   * [SAMTools](http://sourceforge.net/projects/samtools/)
   * [IGV](http://www.broadinstitute.org/software/igv/download)
@@ -51,7 +62,8 @@ These are all already installed, but here are the original links.
   * [Genome Analysis Toolkit](http://www.broadinstitute.org/gatk/)
   * [Picard](http://picard.sourceforge.net/)
   * [SnpEff](http://snpeff.sourceforge.net/)
-
+  * [MuTect](http://www.broadinstitute.org/cancer/cga/mutect)
+  * [Strelka](https://sites.google.com/site/strelkasomaticvariantcaller/)
 
 # First data glance
 So you've just received an email saying that your data is ready for download from the sequencing center of your choice.
@@ -65,7 +77,8 @@ Let's first explore the fastq file.
 Try these commands
 
 ```
-zless -S raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair1.fastq.gz
+{.bash}
+zless -S raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz
 
 ```
 
@@ -75,8 +88,9 @@ zless -S raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair1.fastq.gz
 Now try these commands:
 
 ```
-zcat raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair1.fastq.gz | head -n4
-zcat raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair2.fastq.gz | head -n4
+{.bash}
+zcat raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz | head -n4
+zcat raw_reads/normal/runD0YR4ACXX_1/normal.64.pair2.fastq.gz | head -n4
 ```
 
 **What was special about the output ?**
@@ -108,22 +122,13 @@ Tools like FastQC and BVATools readsqc can be used to plot many metrics from the
 Let's look at the data:
 
 ```
+{.bash}
+# Generate original QC
 mkdir originalQC/
-java -Xmx1G -jar ${BVATOOLS_JAR} readsqc \
-  --read1 raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair1.fastq.gz \
-  --read2 raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair2.fastq.gz \
-  --threads 2 --regionName SRR --output originalQC/
-
-java -Xmx1G -jar ${BVATOOLS_JAR} readsqc \
-  --read1 raw_reads/NA12878/runERR_1/NA12878.ERR.33.pair1.fastq.gz \
-  --read2 raw_reads/NA12878/runERR_1/NA12878.ERR.33.pair2.fastq.gz \
-  --threads 2 --regionName ERR --output originalQC/
-```
-
-Copy the images from the originalQC folder to your desktop and open the images.
-
-```
-scp -r <USER>@www.genome.med.kyoto-u.ac.jp:~/workshop/originalQC/ ./
+java7 -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
+  --read1 raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz \
+  --read2 raw_reads/normal/runD0YR4ACXX_1/normal.64.pair2.fastq.gz \
+  --threads 2 --regionName normalD0YR4ACXX_1 --output originalQC/
 ```
 
 Open the images
@@ -131,7 +136,7 @@ Open the images
 **What stands out in the graphs ?**
 [Solution](solutions/_fastqQC1.md)
 
-All the generated graphics have their uses. But 2 of them are particularly useful to get an overal picture of how good or bad a run went.
+All the generated graphics have their uses. But 3 of them are particularly useful to get an overal picture of how good or bad a run went.
 	- The Quality box plots 
 	- The nucleotide content graphs.
 	- The Box plot shows the quality distribution of your data.
@@ -150,7 +155,7 @@ The formula outputs an integer that is encoded using an ASCII table.
 
 The way the lookup is done is by taking the the phred score adding 33 and using this number as a lookup in the table.
 
-Older illumina runs were using phred+64 instead of phred+33 to encode their fastq files.
+Older illumina runs, and the data here, were using phred+64 instead of phred+33 to encode their fastq files.
 
 ![ACII table](img/ascii_table.png)
 
@@ -160,7 +165,7 @@ Of the raw data we see that:
    - Some reads have bad 3' ends.
    - Some reads have adapter sequences in them.
 
-**Why do we see adapters in SRR ?** [solution](solutions/_adapter1.md)
+**Why do we see adapters ?** [solution](solutions/_adapter1.md)
 
 Although nowadays this doesn't happen often, it does still happen. In some cases, miRNA, it is expected to have adapters.
 
@@ -173,6 +178,7 @@ To do that we will use Trimmomatic.
 The adapter file is in your work folder. 
 
 ```
+{.bash}
 cat adapters.fa
 ```
 
