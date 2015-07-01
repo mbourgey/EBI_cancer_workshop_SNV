@@ -1,0 +1,1 @@
+3% et 7%:  this is on the high side (because it is this is old data) this should be < 2% for 2-3 lanes per library

@@ -1,0 +1,1 @@
+-h would also work which is to show alignments and the header, but when you only want the header, -H is faster.
