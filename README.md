@@ -98,7 +98,7 @@ zcat raw_reads/normal/runD0YR4ACXX_1/normal.64.pair2.fastq.gz | head -n4
 You could also just count the reads
 
 ```{.bash}
-zgrep -c "^@SRR" raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair1.fastq.gz
+zgrep -c "^@HISEQ2" raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz
 ```
 
 We should obtain 15546 reads
@@ -106,7 +106,7 @@ We should obtain 15546 reads
 **Why shouldn't you just do ?** 
 
 ```{.bash}
-zgrep -c "^@" raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair1.fastq.gz
+zgrep -c "^@" raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz
 ```
 
 [Solution](solutions/_fastq3.md)
@@ -119,8 +119,7 @@ Tools like FastQC and BVATools readsqc can be used to plot many metrics from the
 
 Let's look at the data:
 
-```
-{.bash}
+```{.bash}
 # Generate original QC
 mkdir originalQC/
 java7 -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
@@ -175,8 +174,7 @@ To do that we will use Trimmomatic.
  
 The adapter file is in your work folder. 
 
-```
-{.bash}
+```{.bash}
 cat adapters.fa
 ```
 
@@ -186,31 +184,27 @@ cat adapters.fa
 trimming with trimmomatic:
 
 
-```
-mkdir -p reads/NA12878/runSRR_1/
-mkdir -p reads/NA12878/runERR_1/
+```{.bash}
+# Trim and convert data
+for file in raw_reads/*/run*_?/*.pair1.fastq.gz;
+do
+  FNAME=`basename $file`;
+  DIR=`dirname $file`;
+  OUTPUT_DIR=`echo $DIR | sed 's/raw_reads/reads/g'`;
 
-java -Xmx2G -cp $TRIMMOMATIC_JAR org.usadellab.trimmomatic.TrimmomaticPE -threads 2 -phred33 \
-  raw_reads/NA12878/runERR_1/NA12878.ERR.33.pair1.fastq.gz \
-  raw_reads/NA12878/runERR_1/NA12878.ERR.33.pair2.fastq.gz \
-  reads/NA12878/runERR_1/NA12878.ERR.t20l32.pair1.fastq.gz \
-  reads/NA12878/runERR_1/NA12878.ERR.t20l32.single1.fastq.gz \
-  reads/NA12878/runERR_1/NA12878.ERR.t20l32.pair2.fastq.gz \
-  reads/NA12878/runERR_1/NA12878.ERR.t20l32.single2.fastq.gz \
-  ILLUMINACLIP:adapters.fa:2:30:15 TRAILING:20 MINLEN:32 \
-  2> reads/NA12878/runERR_1/NA12878.ERR.trim.out
+  mkdir -p $OUTPUT_DIR;
+  java7 -Xmx2G -cp $TRIMMOMATIC_JAR org.usadellab.trimmomatic.TrimmomaticPE -threads 2 -phred64 \
+    $file \
+    ${file%.pair1.fastq.gz}.pair2.fastq.gz \
+    ${OUTPUT_DIR}/${FNAME%.64.pair1.fastq.gz}.t30l50.pair1.fastq.gz \
+    ${OUTPUT_DIR}/${FNAME%.64.pair1.fastq.gz}.t30l50.single1.fastq.gz \
+    ${OUTPUT_DIR}/${FNAME%.64.pair1.fastq.gz}.t30l50.pair2.fastq.gz \
+    ${OUTPUT_DIR}/${FNAME%.64.pair1.fastq.gz}.t30l50.single2.fastq.gz \
+    TOPHRED33 ILLUMINACLIP:adapters.fa:2:30:15 TRAILING:30 MINLEN:50 \
+    2> ${OUTPUT_DIR}/${FNAME%.64.pair1.fastq.gz}.trim.out ; 
+done
 
-java -Xmx2G -cp $TRIMMOMATIC_JAR org.usadellab.trimmomatic.TrimmomaticPE -threads 2 -phred33 \
-  raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair1.fastq.gz \
-  raw_reads/NA12878/runSRR_1/NA12878.SRR.33.pair2.fastq.gz \
-  reads/NA12878/runSRR_1/NA12878.SRR.t20l32.pair1.fastq.gz \
-  reads/NA12878/runSRR_1/NA12878.SRR.t20l32.single1.fastq.gz \
-  reads/NA12878/runSRR_1/NA12878.SRR.t20l32.pair2.fastq.gz \
-  reads/NA12878/runSRR_1/NA12878.SRR.t20l32.single2.fastq.gz \
-  ILLUMINACLIP:adapters.fa:2:30:15 TRAILING:20 MINLEN:32 \
-  2> reads/NA12878/runSRR_1/NA12878.SRR.trim.out
-
-cat reads/NA12878/runERR_1/NA12878.ERR.trim.out reads/NA12878/runSRR_1/NA12878.SRR.trim.out
+cat reads/normal/runD0YR4ACXX_1/normal.trim.out
 ```
 
 [note on trimmomatic command](notes/_trimmomatic.md)
