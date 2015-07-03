@@ -13,28 +13,28 @@ export STRELKA_HOME=$APP_ROOT/strelka-1.0.13/
 export MUTECT_JAR=$APP_ROOT/muTect-1.1.4-bin/muTect-1.1.4.jar
 export REF=/home/training/Data/DNA_SNV_CNV_bourgey/data/reference
 
-cd $HOME/ebiCancerWorkshop201407
+cd $HOME/ebiCancerWorkshop201507
 
 
-zless -S raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz
+zless -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 
 
-zcat raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz | head -n4
-zcat raw_reads/normal/runD0YR4ACXX_1/normal.64.pair2.fastq.gz | head -n4
+zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz | head -n4
+zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz | head -n4
 
 
-zgrep -c "^@HISEQ2" raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz
+zgrep -c "^@HISEQ2" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 
-zgrep -c "^@" raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz
+zgrep -c "^@" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 
 # Generate original QC
 mkdir originalQC/
 java7 -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
-  --read1 raw_reads/normal/runD0YR4ACXX_1/normal.64.pair1.fastq.gz \
-  --read2 raw_reads/normal/runD0YR4ACXX_1/normal.64.pair2.fastq.gz \
+  --read1 raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz \
+  --read2 raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz \
   --threads 2 --regionName normalD0YR4ACXX_1 --output originalQC/
 
 
@@ -60,7 +60,7 @@ do
     2> ${OUTPUT_DIR}/${FNAME%.64.pair1.fastq.gz}.trim.out ; 
 done
 
-cat reads/normal/runD0YR4ACXX_1/normal.trim.out
+cat reads/normal/run62DVGAAXX_1/normal.trim.out
 
 
 # Align data
@@ -98,7 +98,7 @@ java7 -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
   INPUT=alignment/normal/runC0R2BACXX_6/normal.sorted.bam \
   INPUT=alignment/normal/runC0R2BACXX_7/normal.sorted.bam \
   INPUT=alignment/normal/runC0R2BACXX_8/normal.sorted.bam \
-  INPUT=alignment/normal/runD0YR4ACXX_1/normal.sorted.bam \
+  INPUT=alignment/normal/run62DVGAAXX_1/normal.sorted.bam \
   INPUT=alignment/normal/runD0YR4ACXX_2/normal.sorted.bam \
   OUTPUT=alignment/normal/normal.sorted.bam \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true
