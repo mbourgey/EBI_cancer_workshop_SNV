@@ -32,7 +32,7 @@ zgrep -c "^@" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 # Generate original QC
 mkdir originalQC/
-java7 -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
+java -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
   --read1 raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz \
   --read2 raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz \
   --threads 2 --regionName normalD0YR4ACXX_1 --output originalQC/
@@ -49,7 +49,7 @@ do
   OUTPUT_DIR=`echo $DIR | sed 's/raw_reads/reads/g'`;
 
   mkdir -p $OUTPUT_DIR;
-  java7 -Xmx2G -cp $TRIMMOMATIC_JAR org.usadellab.trimmomatic.TrimmomaticPE -threads 2 -phred64 \
+  java -Xmx2G -cp $TRIMMOMATIC_JAR org.usadellab.trimmomatic.TrimmomaticPE -threads 2 -phred64 \
     $file \
     ${file%.pair1.fastq.gz}.pair2.fastq.gz \
     ${OUTPUT_DIR}/${FNAME%.64.pair1.fastq.gz}.t30l50.pair1.fastq.gz \
@@ -81,7 +81,7 @@ LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMI
     ${REF}/bwa/b37.fasta \
     $file \
     ${file%.pair1.fastq.gz}.pair2.fastq.gz \
-  | java7 -Xmx2G -jar ${PICARD_HOME}/SortSam.jar \
+  | java -Xmx2G -jar ${PICARD_HOME}/SortSam.jar \
     INPUT=/dev/stdin \
     OUTPUT=${OUTPUT_DIR}/${SNAME}.sorted.bam \
     CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000
@@ -89,7 +89,7 @@ done
 
 
 # Merge Data
-java7 -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
+java -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
   INPUT=alignment/normal/runC0LWRACXX_1/normal.sorted.bam \
   INPUT=alignment/normal/runC0LWRACXX_6/normal.sorted.bam \
   INPUT=alignment/normal/runC0PTAACXX_6/normal.sorted.bam \
@@ -103,7 +103,7 @@ java7 -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
   OUTPUT=alignment/normal/normal.sorted.bam \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true
 
-java7 -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
+java -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
   INPUT=alignment/tumor/runBC0TV0ACXX_8/tumor.sorted.bam \
   INPUT=alignment/tumor/runC0LVJACXX_6/tumor.sorted.bam \
   INPUT=alignment/tumor/runC0PK4ACXX_7/tumor.sorted.bam \
@@ -126,7 +126,7 @@ samtools view alignment/normal/normal.sorted.bam | head -n4
 
 
 # Realign
-java7 -Xmx2G  -jar ${GATK_JAR} \
+java -Xmx2G  -jar ${GATK_JAR} \
   -T RealignerTargetCreator \
   -R ${REF}/b37.fasta \
   -o alignment/normal/realign.intervals \
@@ -134,7 +134,7 @@ java7 -Xmx2G  -jar ${GATK_JAR} \
   -I alignment/tumor/tumor.sorted.bam \
   -L 19
 
-java7 -Xmx2G -jar ${GATK_JAR} \
+java -Xmx2G -jar ${GATK_JAR} \
   -T IndelRealigner \
   -R ${REF}/b37.fasta \
   -targetIntervals alignment/normal/realign.intervals \
@@ -152,24 +152,24 @@ java7 -Xmx2G -jar ${GATK_JAR} \
 
 
 # Fix Mate
-java7 -Xmx2G -jar ${PICARD_HOME}/FixMateInformation.jar \
+java -Xmx2G -jar ${PICARD_HOME}/FixMateInformation.jar \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
   INPUT=alignment/normal/normal.sorted.realigned.bam \
   OUTPUT=alignment/normal/normal.matefixed.bam
-java7 -Xmx2G -jar ${PICARD_HOME}/FixMateInformation.jar \
+java -Xmx2G -jar ${PICARD_HOME}/FixMateInformation.jar \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
   INPUT=alignment/tumor/tumor.sorted.realigned.bam \
   OUTPUT=alignment/tumor/tumor.matefixed.bam
 
 
 # Mark Duplicates
-java7 -Xmx2G -jar ${PICARD_HOME}/MarkDuplicates.jar \
+java -Xmx2G -jar ${PICARD_HOME}/MarkDuplicates.jar \
   REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
   INPUT=alignment/normal/normal.matefixed.bam \
   OUTPUT=alignment/normal/normal.sorted.dup.bam \
   METRICS_FILE=alignment/normal/normal.sorted.dup.metrics
 
-java7 -Xmx2G -jar ${PICARD_HOME}/MarkDuplicates.jar \
+java -Xmx2G -jar ${PICARD_HOME}/MarkDuplicates.jar \
   REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
   INPUT=alignment/tumor/tumor.matefixed.bam \
   OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
@@ -182,7 +182,7 @@ less alignment/normal/normal.sorted.dup.metrics
 # Recalibrate
 for i in normal tumor
 do
-  java7 -Xmx2G -jar ${GATK_JAR} \
+  java -Xmx2G -jar ${GATK_JAR} \
     -T BaseRecalibrator \
     -nct 2 \
     -R ${REF}/b37.fasta \
@@ -191,7 +191,7 @@ do
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -I alignment/${i}/${i}.sorted.dup.bam
 
-    java7 -Xmx2G -jar ${GATK_JAR} \
+    java -Xmx2G -jar ${GATK_JAR} \
       -T PrintReads \
       -nct 2 \
       -R ${REF}/b37.fasta \
@@ -206,7 +206,7 @@ done
 # Check Recalibration
 for i in normal tumor
 do
-  java7 -Xmx2G -jar ${GATK_JAR} \
+  java -Xmx2G -jar ${GATK_JAR} \
     -T BaseRecalibrator \
     -nct 2 \
     -R ${REF}/b37.fasta \
@@ -216,7 +216,7 @@ do
     -I alignment/${i}/${i}.sorted.dup.bam \
     -BQSR alignment/${i}/${i}.sorted.dup.recalibration_report.grp
 
-  java7 -Xmx2G -jar ${GATK_JAR} \
+  java -Xmx2G -jar ${GATK_JAR} \
     -T AnalyzeCovariates \
     -R ${REF}/b37.fasta \
     -before alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
@@ -229,7 +229,7 @@ done
 # Get Depth
 for i in normal tumor
 do
-  java7  -Xmx2G -jar ${GATK_JAR} \
+  java  -Xmx2G -jar ${GATK_JAR} \
     -T DepthOfCoverage \
     --omitDepthOutputAtEachBase \
     --summaryCoverageThreshold 10 \
@@ -340,7 +340,7 @@ zless -S variants/mpileup.vcf.gz
 
 
 # SnpEff
-java7  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
+java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
   -o vcf \
   -i vcf \
