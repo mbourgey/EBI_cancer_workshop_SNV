@@ -45,7 +45,7 @@ export BVATOOLS_JAR=$APP_ROOT/bvatools-1.3/bvatools-1.3-full.jar
 export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.32/trimmomatic-0.32.jar
 export STRELKA_HOME=$APP_ROOT/strelka-1.0.13/
 export MUTECT_JAR=$APP_ROOT/muTect-1.1.4-bin/muTect-1.1.4.jar
-export REF=/home/training/ebiCancerWorkshop201407/references/
+export REF=/home/training/Data/DNA_SNV_CNV_bourgey/data/reference
 
 cd $HOME/ebiCancerWorkshop201407
 ```
