@@ -35,10 +35,9 @@ The initial structure of your folders should look like this:
 
 
 ### Environment setup
-```
-{.bash}
+```{.bash}
 export APP_ROOT=/home/training/Applications/
-export PATH=$PATH:$APP_ROOT/bwa-0.7.9a:$APP_ROOT/tabix-0.2.6/:$APP_ROOT/IGVTools
+export PATH=$PATH:$APP_ROOT/IGVTools
 export PICARD_HOME=$APP_ROOT/picard-tools-1.115/
 export SNPEFF_HOME=$APP_ROOT/snpEff/
 export GATK_JAR=$APP_ROOT/gatk/GenomeAnalysisTK.jar
@@ -211,19 +210,8 @@ cat reads/normal/runD0YR4ACXX_1/normal.trim.out
 
 **What does Trimmomatic says it did ?** [Solution](solutions/_trim2.md)
 
-Let's look at the graphs now
-
-```
-mkdir postTrimQC/
-java -Xmx1G -jar ${BVATOOLS_JAR} readsqc \
-  --read1 reads/NA12878/runERR_1/NA12878.ERR.t20l32.pair1.fastq.gz \
-  --read2 reads/NA12878/runERR_1/NA12878.ERR.t20l32.pair2.fastq.gz \
-  --threads 2 --regionName ERR --output postTrimQC/
-java -Xmx1G -jar ${BVATOOLS_JAR} readsqc \
-  --read1 reads/NA12878/runSRR_1/NA12878.SRR.t20l32.pair1.fastq.gz \
-  --read2 reads/NA12878/runSRR_1/NA12878.SRR.t20l32.pair2.fastq.gz \
-  --threads 2 --regionName SRR --output postTrimQC/
-```
+Exercice: 
+**Let's generate the new graphs** [Solution](solutions/_fastqQC2.md)
 
 **How does it look now ?** [Solution](solutions/_trim3.md)
 
@@ -237,29 +225,30 @@ The raw reads are now cleaned up of artefacts we can align each lane separatly.
 
 ##Alignment with bwa-mem
 
-```
-mkdir -p alignment/NA12878/runERR_1
-mkdir -p alignment/NA12878/runSRR_1
+```{.bash}
+# Align data
+for file in reads/*/run*_?/*.pair1.fastq.gz;
+do
+  FNAME=`basename $file`;
+  DIR=`dirname $file`;
+  OUTPUT_DIR=`echo $DIR | sed 's/reads/alignment/g'`;
+  SNAME=`echo $file | sed 's/reads\/\([^/]\+\)\/.*/\1/g'`;
+  RUNID=`echo $file | sed 's/.*\/run\([^_]\+\)_.*/\1/g'`;
+  LANE=`echo $file | sed 's/.*\/run[^_]\+_\(.\).*/\1/g'`;
 
-bwa mem -M -t 2 \
-  -R '@RG\tID:ERR_ERR_1\tSM:NA12878\tLB:ERR\tPU:runERR_1\tCN:Broad Institute\tPL:ILLUMINA' \
-  ${REF}/b37.fasta \
-  reads/NA12878/runERR_1/NA12878.ERR.t20l32.pair1.fastq.gz \
-  reads/NA12878/runERR_1/NA12878.ERR.t20l32.pair2.fastq.gz \
-  | java -Xmx2G -jar ${PICARD_JAR} SortSam \
-  INPUT=/dev/stdin \
-  OUTPUT=alignment/NA12878/runERR_1/NA12878.ERR.sorted.bam \
-  CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000
+  mkdir -p $OUTPUT_DIR;
 
-bwa mem -M -t 2 \
-  -R '@RG\tID:SRR_SRR_1\tSM:NA12878\tLB:SRR\tPU:runSRR_1\tCN:Broad Institute\tPL:ILLUMINA' \
-  ${REF}/b37.fasta \
-  reads/NA12878/runSRR_1/NA12878.SRR.t20l32.pair1.fastq.gz \
-  reads/NA12878/runSRR_1/NA12878.SRR.t20l32.pair2.fastq.gz \
-  | java -Xmx2G -jar ${PICARD_JAR} SortSam \
-  INPUT=/dev/stdin \
-  OUTPUT=alignment/NA12878/runSRR_1/NA12878.SRR.sorted.bam \
-  CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000
+  bwa mem -M -t 3 \
+    -R "@RG\\tID:${SNAME}_${RUNID}_${LANE}\\tSM:${SNAME}\\t\
+LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMINA" \
+    ${REF}/bwa/b37.fasta \
+    $file \
+    ${file%.pair1.fastq.gz}.pair2.fastq.gz \
+  | java7 -Xmx2G -jar ${PICARD_HOME}/SortSam.jar \
+    INPUT=/dev/stdin \
+    OUTPUT=${OUTPUT_DIR}/${SNAME}.sorted.bam \
+    CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000
+done
 ```
  
 **Why did we pipe the output of one to the other ?** [Solution](solutions/_aln3.md)
@@ -277,31 +266,99 @@ We now have alignments for each of the sequences lanes:
 Since we identified the reads in the BAM with read groups, even after the merging, we can still identify the origin of each read.
 
 
-```
-java -Xmx2G -jar ${PICARD_JAR} MergeSamFiles \
-  INPUT=alignment/NA12878/runERR_1/NA12878.ERR.sorted.bam \
-  INPUT=alignment/NA12878/runSRR_1/NA12878.SRR.sorted.bam \
-  OUTPUT=alignment/NA12878/NA12878.sorted.bam \
+```{.bash}
+# Merge Data
+java7 -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
+  INPUT=alignment/normal/runC0LWRACXX_1/normal.sorted.bam \
+  INPUT=alignment/normal/runC0LWRACXX_6/normal.sorted.bam \
+  INPUT=alignment/normal/runC0PTAACXX_6/normal.sorted.bam \
+  INPUT=alignment/normal/runC0PTAACXX_7/normal.sorted.bam \
+  INPUT=alignment/normal/runC0PTAACXX_8/normal.sorted.bam \
+  INPUT=alignment/normal/runC0R2BACXX_6/normal.sorted.bam \
+  INPUT=alignment/normal/runC0R2BACXX_7/normal.sorted.bam \
+  INPUT=alignment/normal/runC0R2BACXX_8/normal.sorted.bam \
+  INPUT=alignment/normal/runD0YR4ACXX_1/normal.sorted.bam \
+  INPUT=alignment/normal/runD0YR4ACXX_2/normal.sorted.bam \
+  OUTPUT=alignment/normal/normal.sorted.bam \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true
+
+java7 -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
+  INPUT=alignment/tumor/runBC0TV0ACXX_8/tumor.sorted.bam \
+  INPUT=alignment/tumor/runC0LVJACXX_6/tumor.sorted.bam \
+  INPUT=alignment/tumor/runC0PK4ACXX_7/tumor.sorted.bam \
+  INPUT=alignment/tumor/runC0PK4ACXX_8/tumor.sorted.bam \
+  INPUT=alignment/tumor/runC0R29ACXX_7/tumor.sorted.bam \
+  INPUT=alignment/tumor/runC0R29ACXX_8/tumor.sorted.bam \
+  INPUT=alignment/tumor/runC0TTBACXX_3/tumor.sorted.bam \
+  INPUT=alignment/tumor/runD114WACXX_8/tumor.sorted.bam \
+  OUTPUT=alignment/tumor/tumor.sorted.bam \
+  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true
+
 ``` 
 
 You should now have one BAM containing all your data.
 
 Let's double check
 
-```
-ls -l alignment/NA12878/
-samtools view -H alignment/NA12878/NA12878.sorted.bam | grep "^@RG"
+```{.bash}
+ls -l alignment/normal/
+samtools view -H alignment/normal/normal.sorted.bam | grep "^@RG"
 
 ```
 
-You should have your 2 read group entries.
+You should have your 10 read group entries.
 
 **Why did we use the -H switch? ** [Solution](solutions/_merge1.md)
 
 **Try without. What happens?** [Solution](solutions/_merge2.md)
 
 [lane merging note](notes/_merge1.md)
+
+## SAM/BAM exploration
+Let's spend some time to explore bam files.
+
+```{.bash}
+samtools view alignment/normal/normal.sorted.bam | head -n4
+```
+
+Here you have examples of alignment results.
+A full description of the flags can be found in the SAM specification
+http://samtools.sourceforge.net/SAM1.pdf
+
+You can try using picards explain flag site to understand what is going on with your reads
+http://picard.sourceforge.net/explain-flags.html
+
+The flag is the 2nd column.
+
+**What do the flags of the first 1st and 3rd reads mean?** [solutions](../solutions/_sambam1.md)
+
+Let's take the 2nd one, the one that is in proper pair, and find it's pair.
+
+## SAM/BAM filtering
+
+You can use samtools to filter reads as well.
+
+Exercice:
+**How many reads mapped and unmapped were there?** [solution](../solutions/_sambam2.md)
+
+
+## SAM/BAM CIGAR string
+Another useful bit of information in the SAM is the CIGAR string.
+It's the 6th column in the file. 
+
+This column explains how the alignment was achieved.
+ 
+        M == base aligns *but doesn't have to be a match*. A SNP will have an M even if it disagrees with the reference.
+        I == Insertion
+        D == Deletion
+        S == soft-clips. These are handy to find un removed adapters, viral insertions, etc.
+
+An in depth explanation of the CIGAR can be found [here](http://genome.sph.umich.edu/wiki/SAM)
+
+The exact details of the cigar string can be found in the SAM spec as well.
+
+
+We won't go into too much detail at this point since we want to concentrate on cancer specific issues now.
 
 
 # Cleaning up alignments
@@ -319,27 +376,49 @@ It basically runs in 2 steps:
 
 ##GATK IndelRealigner
 
-```
-java -Xmx2G  -jar ${GATK_JAR} \
+```{.bash}
+# Realign
+java7 -Xmx2G  -jar ${GATK_JAR} \
   -T RealignerTargetCreator \
   -R ${REF}/b37.fasta \
-  -o alignment/NA12878/realign.intervals \
-  -I alignment/NA12878/NA12878.sorted.bam \
-  -L 1
+  -o alignment/normal/realign.intervals \
+  -I alignment/normal/normal.sorted.bam \
+  -I alignment/tumor/tumor.sorted.bam \
+  -L 19
 
-java -Xmx2G -jar ${GATK_JAR} \
+java7 -Xmx2G -jar ${GATK_JAR} \
   -T IndelRealigner \
   -R ${REF}/b37.fasta \
-  -targetIntervals alignment/NA12878/realign.intervals \
-  -o alignment/NA12878/NA12878.realigned.sorted.bam \
-  -I alignment/NA12878/NA12878.sorted.bam
+  -targetIntervals alignment/normal/realign.intervals \
+  --nWayOut .realigned.bam \
+  -I alignment/normal/normal.sorted.bam \
+  -I alignment/tumor/tumor.sorted.bam
+
+  mv normal.sorted.realigned.bam alignment/normal/
+  mv tumor.sorted.realigned.bam alignment/tumor/
 
 ```
+**Why did we use both normal and tumor together? ** [Solution](solutions/_realign3.md)
 
 **How could we make this go faster ?** [Solution](solutions/_realign1.md)
 
 **How many regions did it think needed cleaning ?** [Solution](solutions/_realign2.md)
 
+Indel Realigner also makes sure the called deletions are left aligned when there is a microsatellite or homopolymer.
+
+```
+This
+ATCGAAAA-TCG
+into
+ATCG-AAAATCG
+
+or
+ATCGATATATATA--TCG
+into
+ATCG--ATATATATATCG
+```
+
+**Why it is important ?**[Solution](solutions/_realign4.md)
 
 ## FixMates
 Why ?
@@ -348,11 +427,16 @@ Why ?
 
 We use Picard to do this:
 
-```
-java -Xmx2G -jar ${PICARD_JAR} FixMateInformation \
+```{.bash}
+# Fix Mate
+java7 -Xmx2G -jar ${PICARD_HOME}/FixMateInformation.jar \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
-  INPUT=alignment/NA12878/NA12878.realigned.sorted.bam \
-  OUTPUT=alignment/NA12878/NA12878.matefixed.sorted.bam
+  INPUT=alignment/normal/normal.sorted.realigned.bam \
+  OUTPUT=alignment/normal/normal.matefixed.bam
+java7 -Xmx2G -jar ${PICARD_HOME}/FixMateInformation.jar \
+  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
+  INPUT=alignment/tumor/tumor.sorted.realigned.bam \
+  OUTPUT=alignment/tumor/tumor.matefixed.bam
 ```
 
 ## Mark duplicates
@@ -364,18 +448,25 @@ java -Xmx2G -jar ${PICARD_JAR} FixMateInformation \
 
 Here we will use picards approach:
 
-```
-java -Xmx2G -jar ${PICARD_JAR} MarkDuplicates \
+```{.bash}
+# Mark Duplicates
+java7 -Xmx2G -jar ${PICARD_HOME}/MarkDuplicates.jar \
   REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
-  INPUT=alignment/NA12878/NA12878.matefixed.sorted.bam \
-  OUTPUT=alignment/NA12878/NA12878.sorted.dup.bam \
-  METRICS_FILE=alignment/NA12878/NA12878.sorted.dup.metrics
+  INPUT=alignment/normal/normal.matefixed.bam \
+  OUTPUT=alignment/normal/normal.sorted.dup.bam \
+  METRICS_FILE=alignment/normal/normal.sorted.dup.metrics
+
+java7 -Xmx2G -jar ${PICARD_HOME}/MarkDuplicates.jar \
+  REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
+  INPUT=alignment/tumor/tumor.matefixed.bam \
+  OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
+  METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
 ```
 
 We can look in the metrics output to see what happened.
 
-```
-less alignment/NA12878/NA12878.sorted.dup.metrics
+```{.bash}
+less alignment/normal/normal.sorted.dup.metrics
 ```
 
 **How many duplicates were there ?** [Solution](solutions/_markdup4.md)
@@ -389,25 +480,63 @@ We can see that it computed separate measures for each library.
 ## Base Quality recalibration
 **Why do we need to recalibrate base quality scores ?** [Solution](solutions/_recal1.md)
 
+
+It runs in 2 steps, 
+1- Build covariates based on context and known snp sites
+2- Correct the reads based on these metrics
+
+
 GATK BaseRecalibrator:
 
-```
-java -Xmx2G -jar ${GATK_JAR} \
-  -T BaseRecalibrator \
-  -nct 2 \
-  -R ${REF}/b37.fasta \
-  -knownSites ${REF}/dbSnp-137.vcf.gz \
-  -L 1:47000000-47171000 \
-  -o alignment/NA12878/NA12878.sorted.dup.recalibration_report.grp \
-  -I alignment/NA12878/NA12878.sorted.dup.bam
+```{.bash}
+# Recalibrate
+for i in normal tumor
+do
+  java7 -Xmx2G -jar ${GATK_JAR} \
+    -T BaseRecalibrator \
+    -nct 2 \
+    -R ${REF}/b37.fasta \
+    -knownSites ${REF}/dbSnp-137.vcf.gz \
+    -L 19:50500000-52502000 \
+    -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
+    -I alignment/${i}/${i}.sorted.dup.bam
 
-java -Xmx2G -jar ${GATK_JAR} \
-  -T PrintReads \
-  -nct 2 \
-  -R ${REF}/b37.fasta \
-  -BQSR alignment/NA12878/NA12878.sorted.dup.recalibration_report.grp \
-  -o alignment/NA12878/NA12878.sorted.dup.recal.bam \
-  -I alignment/NA12878/NA12878.sorted.dup.bam
+    java7 -Xmx2G -jar ${GATK_JAR} \
+      -T PrintReads \
+      -nct 2 \
+      -R ${REF}/b37.fasta \
+      -BQSR alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
+      -o alignment/${i}/${i}.sorted.dup.recal.bam \
+      -I alignment/${i}/${i}.sorted.dup.bam
+done
+```
+
+```
+
+Just to see how things change let's make GATK recalibrate after a first pass
+
+```{.bash}
+# Check Recalibration
+for i in normal tumor
+do
+  java7 -Xmx2G -jar ${GATK_JAR} \
+    -T BaseRecalibrator \
+    -nct 2 \
+    -R ${REF}/b37.fasta \
+    -knownSites ${REF}/dbSnp-137.vcf.gz \
+    -L 19:50500000-52502000 \
+    -o alignment/${i}/${i}.sorted.dup.recalibration_report.seconnd.grp \
+    -I alignment/${i}/${i}.sorted.dup.bam \
+    -BQSR alignment/${i}/${i}.sorted.dup.recalibration_report.grp
+
+  java7 -Xmx2G -jar ${GATK_JAR} \
+    -T AnalyzeCovariates \
+    -R ${REF}/b37.fasta \
+    -before alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
+    -after alignment/${i}/${i}.sorted.dup.recalibration_report.seconnd.grp \
+    -csv alignment/${i}/BQSR.${i}.csv \
+    -plots alignment/${i}/BQSR.${i}.pdf
+done
 ```
 
 
@@ -428,28 +557,33 @@ Both GATK and BVATools have depth of coverage tools.
 
 Here we'll use the GATK one
 
-```
-java  -Xmx2G -jar ${GATK_JAR} \
-  -T DepthOfCoverage \
-  --omitDepthOutputAtEachBase \
-  --summaryCoverageThreshold 10 \
-  --summaryCoverageThreshold 25 \
-  --summaryCoverageThreshold 50 \
-  --summaryCoverageThreshold 100 \
-  --start 1 --stop 500 --nBins 499 -dt NONE \
-  -R ${REF}/b37.fasta \
-  -o alignment/NA12878/NA12878.sorted.dup.recal.coverage \
-  -I alignment/NA12878/NA12878.sorted.dup.recal.bam \
-  -L 1:47000000-47171000
+```{.bash}
+# Get Depth
+for i in normal tumor
+do
+  java7  -Xmx2G -jar ${GATK_JAR} \
+    -T DepthOfCoverage \
+    --omitDepthOutputAtEachBase \
+    --summaryCoverageThreshold 10 \
+    --summaryCoverageThreshold 25 \
+    --summaryCoverageThreshold 50 \
+    --summaryCoverageThreshold 100 \
+    --start 1 --stop 500 --nBins 499 -dt NONE \
+    -R ${REF}/b37.fasta \
+    -o alignment/${i}/${i}.sorted.dup.recal.coverage \
+    -I alignment/${i}/${i}.sorted.dup.recal.bam \
+    -L 19:50500000-52502000 
+done
 ```
 [note on DepthOfCoverage command](notes/_DOC.md)
 
-Coverage is the expected ~30x
+Coverage is the expected ~70-110x in these project
 
 Look at the coverage:
 
-```
-less -S alignment/NA12878/NA12878.sorted.dup.recal.coverage.sample_interval_summary
+```{.bash}
+less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
+less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
 ```
 
 **Is the coverage fit with the expectation ?** [solution](solutions/_DOC1.md)
@@ -461,20 +595,25 @@ Different from the gap size (= distance between reads) !
 
 These metrics are computed using Picard:
 
-```
-java -Xmx2G -jar ${PICARD_JAR} CollectInsertSizeMetrics \
-  VALIDATION_STRINGENCY=SILENT \
-  REFERENCE_SEQUENCE=${REF}/b37.fasta \
-  INPUT=alignment/NA12878/NA12878.sorted.dup.recal.bam \
-  OUTPUT=alignment/NA12878/NA12878.sorted.dup.recal.metric.insertSize.tsv \
-  HISTOGRAM_FILE=alignment/NA12878/NA12878.sorted.dup.recal.metric.insertSize.histo.pdf \
-  METRIC_ACCUMULATION_LEVEL=LIBRARY
+```{.bash}
+# Get insert size
+for i in normal tumor
+do
+  java -Xmx2G -jar ${PICARD_HOME}/CollectInsertSizeMetrics.jar \
+    VALIDATION_STRINGENCY=SILENT \
+    REFERENCE_SEQUENCE=${REF}/b37.fasta \
+    INPUT=alignment/${i}/${i}.sorted.dup.recal.bam \
+    OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.tsv \
+    HISTOGRAM_FILE=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.histo.pdf \
+    METRIC_ACCUMULATION_LEVEL=LIBRARY
+done
 ```
 
 look at the output
 
-```
-less -S alignment/NA12878/NA12878.sorted.dup.recal.metric.insertSize.tsv
+```{.bash}
+less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
+less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
 ```
 
 There is something interesting going on with our library ERR.
@@ -486,19 +625,24 @@ For the alignment metrics, samtools flagstat is very fast but with bwa-mem since
 
 We prefer the Picard way of computing metrics:
 
-```
-java -Xmx2G -jar ${PICARD_JAR} CollectAlignmentSummaryMetrics \
-  VALIDATION_STRINGENCY=SILENT \
-  REFERENCE_SEQUENCE=${REF}/b37.fasta \
-  INPUT=alignment/NA12878/NA12878.sorted.dup.recal.bam \
-  OUTPUT=alignment/NA12878/NA12878.sorted.dup.recal.metric.alignment.tsv \
-  METRIC_ACCUMULATION_LEVEL=LIBRARY
+```{.bash}
+# Get alignment metrics
+for i in normal tumor
+do
+  java -Xmx2G -jar ${PICARD_HOME}/CollectAlignmentSummaryMetrics.jar \
+    VALIDATION_STRINGENCY=SILENT \
+    REFERENCE_SEQUENCE=${REF}/b37.fasta \
+    INPUT=alignment/${i}/${i}.sorted.dup.recal.bam \
+    OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.alignment.tsv \
+    METRIC_ACCUMULATION_LEVEL=LIBRARY
+done
 ```
 
 explore the results
 
-```
-less -S alignment/NA12878/NA12878.sorted.dup.recal.metric.alignment.tsv
+```{.bash}
+less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
+less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
 
 ```
 
@@ -510,37 +654,95 @@ less -S alignment/NA12878/NA12878.sorted.dup.recal.metric.alignment.tsv
 
 Most of SNV caller use either a Baysian, a threshold or a t-test approach to do the calling
 
-I won't go into the details of finding which variant is good or bad since this will be your next workshop. 
+ Here we will try 3 variant callers.
+- SAMtools
+- MuTecT
+- Strelka
 
-Here we will just call and view the variants using the samtools mpileup function:
+Other candidates
+- Varscan 2
+- Virmid
+- Somatic sniper
 
+many, MANY others can be found here:
+https://www.biostars.org/p/19104/
+
+In our case, let's start with:
+
+```{.bash}
+mkdir pairedVariants
 ```
-mkdir variants
-samtools mpileup -L 1000 -B -q 1 -g \
-	-f ${REF}/b37.fasta \
-	-r 1:47000000-47171000 \
-	alignment/NA12878/NA12878.sorted.dup.recal.bam | bcftools  view -vcg -  \
-	> variants/mpileup.vcf
 
+## SAMtools
+
+```{.bash}
+# Variants SAMTools
+samtools mpileup -L 1000 -B -q 1 -D -S -g \
+  -f ${REF}/b37.fasta \
+  -r 19:50500000-52502000 \
+  alignment/normal/normal.sorted.dup.recal.bam \
+  alignment/tumor/tumor.sorted.dup.recal.bam \
+  | bcftools view -vcg -T pair - \
+  > pairedVariants/mpileup.vcf
 ```
 
 [note on samtools mpileup and bcftools command](notes/_mpileup.md)
 
+## Broad MuTecT
+
+```{.bash}
+# Variants MuTecT
+# Note MuTecT only works with Java 6, 7 will give you an error
+# if you get "Comparison method violates its general contract!
+# you used java 7"
+java -Xmx2G -jar ${MUTECT_JAR} \
+  -T MuTect \
+  -R ${REF}/b37.fasta \
+  -dt NONE -baq OFF --validation_strictness LENIENT -nt 2 \
+  --dbsnp ${REF}/dbSnp-137.vcf.gz \
+  --cosmic ${REF}/b37_cosmic_v54_120711.vcf \
+  --input_file:normal alignment/normal/normal.sorted.dup.recal.bam \
+  --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
+  --out pairedVariants/mutect.call_stats.txt \
+  --coverage_file pairedVariants/mutect.wig.txt \
+  -pow pairedVariants/mutect.power \
+  -vcf pairedVariants/mutect.vcf \
+  -L 19:50500000-52502000
+```
+
+## Illumina Strelka
+
+```{.bash}
+# Variants Strelka
+cp ${STRELKA_HOME}/etc/strelka_config_bwa_default.ini ./
+# Fix ini since we subsampled
+sed 's/isSkipDepthFilters =.*/isSkipDepthFilters = 1/g' -i strelka_config_bwa_default.ini
+
+${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
+  --normal=alignment/normal/normal.sorted.dup.recal.bam \
+  --tumor=alignment/tumor/tumor.sorted.dup.recal.bam \
+  --ref=${REF}/b37.fasta \
+  --config=strelka_config_bwa_default.ini \
+  --output-dir=pairedVariants/strelka/
+
+  cd pairedVariants/strelka/
+  make -j3
+  cd $HOME/ebiCancerWorkshop201407
+
+  cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
+```
+
 Now we have variants from all three methods. Let's compress and index the vcfs for futur visualisation.
 
-```
-bgzip -c variants/mpileup.vcf > variants/mpileup.vcf.gz
-
-tabix -p vcf variants/mpileup.vcf.gz
-
+```{.bash}
+for i in pairedVariants/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
 ```
 
-Let's look at the compressed vcf.
+Let's look at a compressed vcf.
 
-```
+```{.bash}
 zless -S variants/mpileup.vcf.gz
 ```
-
 Details on the spec can be found here:
 http://vcftools.sourceforge.net/specs.html
 
@@ -559,21 +761,22 @@ We typically use snpEff but many use annovar and VEP as well.
 
 Let's run snpEff:
 
-```
-java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
+```{.bash}
+# SnpEff
+java7  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
   -o vcf \
   -i vcf \
-  -stats variants/mpileup.snpeff.vcf.stats.html \
-  GRCh37.74 \
-  variants/mpileup.vcf \
-  > variants/mpileup.snpeff.vcf
+  -stats pairedVariants/mpileup.snpeff.vcf.stats.html \
+  hg19 \
+  pairedVariants/mpileup.vcf \
+  > pairedVariants/mpileup.snpeff.vcf
 ```
 
 Look at the new vcf file:
 
-```
-less -S variants/mpileup.snpeff.vcf
+```{.bash}
+less -S pairedVariants/mpileup.snpeff.vcf
 ```
 
 **Can you see the difference with the previous vcf ?**[solution](solutions/_snpeff1.md)
@@ -591,12 +794,16 @@ The Integrative Genomics Viewer (IGV) is an efficient visualization tool for int
 
 Before jumping into IGV, we'll generate a track IGV can use to plot coverage:
 
-```
-igvtools count \
-  -f min,max,mean \
-  alignment/NA12878/NA12878.sorted.dup.recal.bam \
-  alignment/NA12878/NA12878.sorted.dup.recal.bam.tdf \
-  b37
+```{.bash}
+# Coverage Track
+for i in normal tumor
+do
+  igvtools count \
+    -f min,max,mean \
+    alignment/${i}/${i}.sorted.dup.recal.bam \
+    alignment/${i}/${i}.sorted.dup.recal.bam.tdf \
+    b37
+done
 ```
 
 Then:
@@ -604,42 +811,16 @@ Then:
    1. Open IGV
    2. Chose the reference genome corresponding to those use for alignment (b37)
    3. Load bam file
-   4. Load vcf file
+   4. Load vcf files
 
 Explore/play with the data: 
  
-   - find an indel
+   - find somatic variants
    - Look around...
 
-#Rational on Structural Variant calling methods
-
-What are structural variants ?
-
-![SV examples](img/SV.png) 
-
-## Read pair methods
-Identification of read pairs clusters with abnormal inserts size or orientation
-
-![PER method](img/per.png)
-
-##Depth of coverage methods
-Identification of genomic regions harbouring a lack or an excess of reads
-
-![DOC method](img/doc.png)
-
-##Split read methods
-local alignment in a targeted genomic region of unmapped ends from one-end-anchored reads
-
-![SR method](img/sr.png)
-
-##Assembly methods
-It performs a de novo assemblies followed by local permissive alignments
-
-![DN method](img/dn.png)
+[solution](solutions/_igv1.md)
 
 
-#Add-on
-[Additional exercice to play with sam/bam files](add-on/sam_bam.md)
 
 ## Aknowledgments
-This tutorial is an adaptation of the one created by Louis letourneau [here](https://github.com/lletourn/Workshops/tree/kyoto201403). I would like to thank and acknowledge Louis for this help and for sharing his material. the format of the tutorial has been inspired from Mar Gonzalez Porta of Embl-EBI. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.
+This tutorial is an adaptation of the one created by Louis letourneau [here](https://github.com/lletourn/Workshops/tree/ebiCancerWorkshop201407doc/01-SNVCalling.md). I would like to thank and acknowledge Louis for this help and for sharing his material. The format of the tutorial has been inspired from Mar Gonzalez Porta. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.
