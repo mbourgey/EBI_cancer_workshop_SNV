@@ -4,14 +4,14 @@
 
 export APP_ROOT=/home/training/Applications/
 export PATH=$PATH:$APP_ROOT/IGVTools
-export PICARD_HOME=$APP_ROOT/picard-tools-1.115/
+export PICARD_JAR=$APP_ROOT/picard-tools/picard.jar
 export SNPEFF_HOME=$APP_ROOT/snpEff/
 export GATK_JAR=$APP_ROOT/gatk/GenomeAnalysisTK.jar
-export BVATOOLS_JAR=$APP_ROOT/bvatools-1.3/bvatools-1.3-full.jar
-export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.32/trimmomatic-0.32.jar
-export STRELKA_HOME=$APP_ROOT/strelka-1.0.13/
-export MUTECT_JAR=$APP_ROOT/muTect-1.1.4-bin/muTect-1.1.4.jar
-export REF=/home/training/Data/DNA_SNV_CNV_bourgey/data/reference
+export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
+export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.33/trimmomatic-0.33.jar
+export STRELKA_HOME=$APP_ROOT/strelka-1.0.14/
+export MUTECT_JAR=$APP_ROOT/muTect-src/muTect-1.1.7.jar
+export REF=/home/training/ebiCancerWorkshop201507/reference
 
 cd $HOME/ebiCancerWorkshop201507
 

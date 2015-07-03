@@ -38,14 +38,14 @@ The initial structure of your folders should look like this:
 ```{.bash}
 export APP_ROOT=/home/training/Applications/
 export PATH=$PATH:$APP_ROOT/IGVTools
-export PICARD_HOME=$APP_ROOT/picard-tools-1.115/
+export PICARD_JAR=$APP_ROOT/picard-tools/picard.jar
 export SNPEFF_HOME=$APP_ROOT/snpEff/
 export GATK_JAR=$APP_ROOT/gatk/GenomeAnalysisTK.jar
-export BVATOOLS_JAR=$APP_ROOT/bvatools-1.3/bvatools-1.3-full.jar
-export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.32/trimmomatic-0.32.jar
-export STRELKA_HOME=$APP_ROOT/strelka-1.0.13/
-export MUTECT_JAR=$APP_ROOT/muTect-1.1.4-bin/muTect-1.1.4.jar
-export REF=/home/training/Data/DNA_SNV_CNV_bourgey/data/reference
+export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
+export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.33/trimmomatic-0.33.jar
+export STRELKA_HOME=$APP_ROOT/strelka-1.0.14/
+export MUTECT_JAR=$APP_ROOT/muTect-src/muTect-1.1.7.jar
+export REF=/home/training/ebiCancerWorkshop201507/reference
 
 cd $HOME/ebiCancerWorkshop201507
 ```
@@ -244,7 +244,7 @@ LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMI
     ${REF}/bwa/b37.fasta \
     $file \
     ${file%.pair1.fastq.gz}.pair2.fastq.gz \
-  | java -Xmx2G -jar ${PICARD_HOME}/SortSam.jar \
+  | java -Xmx2G -jar ${PICARD_JAR}  SortSam \
     INPUT=/dev/stdin \
     OUTPUT=${OUTPUT_DIR}/${SNAME}.sorted.bam \
     CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000
@@ -268,7 +268,7 @@ Since we identified the reads in the BAM with read groups, even after the mergin
 
 ```{.bash}
 # Merge Data
-java -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
+java -Xmx2G -jar ${PICARD_JAR}  MergeSamFiles \
   INPUT=alignment/normal/runC0LWRACXX_1/normal.sorted.bam \
   INPUT=alignment/normal/runC0LWRACXX_6/normal.sorted.bam \
   INPUT=alignment/normal/runC0PTAACXX_6/normal.sorted.bam \
@@ -282,7 +282,7 @@ java -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
   OUTPUT=alignment/normal/normal.sorted.bam \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true
 
-java -Xmx2G -jar ${PICARD_HOME}/MergeSamFiles.jar \
+java -Xmx2G -jar ${PICARD_JAR}  MergeSamFiles \
   INPUT=alignment/tumor/runBC0TV0ACXX_8/tumor.sorted.bam \
   INPUT=alignment/tumor/runC0LVJACXX_6/tumor.sorted.bam \
   INPUT=alignment/tumor/runC0PK4ACXX_7/tumor.sorted.bam \
@@ -429,11 +429,11 @@ We use Picard to do this:
 
 ```{.bash}
 # Fix Mate
-java -Xmx2G -jar ${PICARD_HOME}/FixMateInformation.jar \
+java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
   INPUT=alignment/normal/normal.sorted.realigned.bam \
   OUTPUT=alignment/normal/normal.matefixed.bam
-java -Xmx2G -jar ${PICARD_HOME}/FixMateInformation.jar \
+java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
   INPUT=alignment/tumor/tumor.sorted.realigned.bam \
   OUTPUT=alignment/tumor/tumor.matefixed.bam
@@ -450,13 +450,13 @@ Here we will use picards approach:
 
 ```{.bash}
 # Mark Duplicates
-java -Xmx2G -jar ${PICARD_HOME}/MarkDuplicates.jar \
+java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
   INPUT=alignment/normal/normal.matefixed.bam \
   OUTPUT=alignment/normal/normal.sorted.dup.bam \
   METRICS_FILE=alignment/normal/normal.sorted.dup.metrics
 
-java -Xmx2G -jar ${PICARD_HOME}/MarkDuplicates.jar \
+java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
   INPUT=alignment/tumor/tumor.matefixed.bam \
   OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
@@ -599,7 +599,7 @@ These metrics are computed using Picard:
 # Get insert size
 for i in normal tumor
 do
-  java -Xmx2G -jar ${PICARD_HOME}/CollectInsertSizeMetrics.jar \
+  java -Xmx2G -jar ${PICARD_JAR}  CollectInsertSizeMetrics \
     VALIDATION_STRINGENCY=SILENT \
     REFERENCE_SEQUENCE=${REF}/b37.fasta \
     INPUT=alignment/${i}/${i}.sorted.dup.recal.bam \
@@ -629,7 +629,7 @@ We prefer the Picard way of computing metrics:
 # Get alignment metrics
 for i in normal tumor
 do
-  java -Xmx2G -jar ${PICARD_HOME}/CollectAlignmentSummaryMetrics.jar \
+  java -Xmx2G -jar ${PICARD_JAR}  CollectAlignmentSummaryMetrics \
     VALIDATION_STRINGENCY=SILENT \
     REFERENCE_SEQUENCE=${REF}/b37.fasta \
     INPUT=alignment/${i}/${i}.sorted.dup.recal.bam \
