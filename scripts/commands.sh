@@ -78,7 +78,7 @@ do
   bwa mem -M -t 3 \
     -R "@RG\\tID:${SNAME}_${RUNID}_${LANE}\\tSM:${SNAME}\\t\
 LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMINA" \
-    ${REF}/bwa/b37.fasta \
+    ${REF}Homo_sapiens.GRCh37.fa \
     $file \
     ${file%.pair1.fastq.gz}.pair2.fastq.gz \
   | java -Xmx2G -jar ${PICARD_JAR}  SortSam \
@@ -128,7 +128,7 @@ samtools view alignment/normal/normal.sorted.bam | head -n4
 # Realign
 java -Xmx2G  -jar ${GATK_JAR} \
   -T RealignerTargetCreator \
-  -R ${REF}/b37.fasta \
+  -R ${REF}/Homo_sapiens.GRCh37.fa \
   -o alignment/normal/realign.intervals \
   -I alignment/normal/normal.sorted.bam \
   -I alignment/tumor/tumor.sorted.bam \
@@ -136,7 +136,7 @@ java -Xmx2G  -jar ${GATK_JAR} \
 
 java -Xmx2G -jar ${GATK_JAR} \
   -T IndelRealigner \
-  -R ${REF}/b37.fasta \
+  -R ${REF}/Homo_sapiens.GRCh37.fa \
   -targetIntervals alignment/normal/realign.intervals \
   --nWayOut .realigned.bam \
   -I alignment/normal/normal.sorted.bam \
@@ -185,7 +185,7 @@ do
   java -Xmx2G -jar ${GATK_JAR} \
     -T BaseRecalibrator \
     -nct 2 \
-    -R ${REF}/b37.fasta \
+    -R ${REF}/Homo_sapiens.GRCh37.fa \
     -knownSites ${REF}/dbSnp-137.vcf.gz \
     -L 19:50500000-52502000 \
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
@@ -194,7 +194,7 @@ do
     java -Xmx2G -jar ${GATK_JAR} \
       -T PrintReads \
       -nct 2 \
-      -R ${REF}/b37.fasta \
+      -R ${REF}/Homo_sapiens.GRCh37.fa \
       -BQSR alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
       -o alignment/${i}/${i}.sorted.dup.recal.bam \
       -I alignment/${i}/${i}.sorted.dup.bam
@@ -209,7 +209,7 @@ do
   java -Xmx2G -jar ${GATK_JAR} \
     -T BaseRecalibrator \
     -nct 2 \
-    -R ${REF}/b37.fasta \
+    -R ${REF}/Homo_sapiens.GRCh37.fa \
     -knownSites ${REF}/dbSnp-137.vcf.gz \
     -L 19:50500000-52502000 \
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.seconnd.grp \
@@ -218,7 +218,7 @@ do
 
   java -Xmx2G -jar ${GATK_JAR} \
     -T AnalyzeCovariates \
-    -R ${REF}/b37.fasta \
+    -R ${REF}/Homo_sapiens.GRCh37.fa \
     -before alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -after alignment/${i}/${i}.sorted.dup.recalibration_report.seconnd.grp \
     -csv alignment/${i}/BQSR.${i}.csv \
@@ -237,7 +237,7 @@ do
     --summaryCoverageThreshold 50 \
     --summaryCoverageThreshold 100 \
     --start 1 --stop 500 --nBins 499 -dt NONE \
-    -R ${REF}/b37.fasta \
+    -R ${REF}/Homo_sapiens.GRCh37.fa \
     -o alignment/${i}/${i}.sorted.dup.recal.coverage \
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -L 19:50500000-52502000 
@@ -253,7 +253,7 @@ for i in normal tumor
 do
   java -Xmx2G -jar ${PICARD_JAR}  CollectInsertSizeMetrics \
     VALIDATION_STRINGENCY=SILENT \
-    REFERENCE_SEQUENCE=${REF}/b37.fasta \
+    REFERENCE_SEQUENCE=${REF}/Homo_sapiens.GRCh37.fa \
     INPUT=alignment/${i}/${i}.sorted.dup.recal.bam \
     OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.tsv \
     HISTOGRAM_FILE=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.histo.pdf \
@@ -270,7 +270,7 @@ for i in normal tumor
 do
   java -Xmx2G -jar ${PICARD_JAR}  CollectAlignmentSummaryMetrics \
     VALIDATION_STRINGENCY=SILENT \
-    REFERENCE_SEQUENCE=${REF}/b37.fasta \
+    REFERENCE_SEQUENCE=${REF}/Homo_sapiens.GRCh37.fa \
     INPUT=alignment/${i}/${i}.sorted.dup.recal.bam \
     OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.alignment.tsv \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
@@ -287,7 +287,7 @@ mkdir pairedVariants
 
 # Variants SAMTools
 samtools mpileup -L 1000 -B -q 1 -D -S -g \
-  -f ${REF}/b37.fasta \
+  -f ${REF}/Homo_sapiens.GRCh37.fa \
   -r 19:50500000-52502000 \
   alignment/normal/normal.sorted.dup.recal.bam \
   alignment/tumor/tumor.sorted.dup.recal.bam \
@@ -301,7 +301,7 @@ samtools mpileup -L 1000 -B -q 1 -D -S -g \
 # you used java 7"
 java -Xmx2G -jar ${MUTECT_JAR} \
   -T MuTect \
-  -R ${REF}/b37.fasta \
+  -R ${REF}/Homo_sapiens.GRCh37.fa \
   -dt NONE -baq OFF --validation_strictness LENIENT -nt 2 \
   --dbsnp ${REF}/dbSnp-137.vcf.gz \
   --cosmic ${REF}/b37_cosmic_v54_120711.vcf \
@@ -322,7 +322,7 @@ sed 's/isSkipDepthFilters =.*/isSkipDepthFilters = 1/g' -i strelka_config_bwa_de
 ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
   --normal=alignment/normal/normal.sorted.dup.recal.bam \
   --tumor=alignment/tumor/tumor.sorted.dup.recal.bam \
-  --ref=${REF}/b37.fasta \
+  --ref=${REF}/Homo_sapiens.GRCh37.fa \
   --config=strelka_config_bwa_default.ini \
   --output-dir=pairedVariants/strelka/
 
