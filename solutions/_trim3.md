@@ -1,3 +1,2 @@
-It looks better, and there is no longer any adapters.
+It looks better, and most of adapters have been removed.
 
-On the SRR there is a big A bias towards the 3' end of reads
