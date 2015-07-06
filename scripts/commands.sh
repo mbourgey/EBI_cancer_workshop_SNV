@@ -16,7 +16,7 @@ export REF=/home/training/ebiCancerWorkshop201507/reference
 cd $HOME/ebiCancerWorkshop201507
 
 
-zless -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+#z#less -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 
 
@@ -176,7 +176,7 @@ java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
 
 
-less alignment/normal/normal.sorted.dup.metrics
+#less alignment/normal/normal.sorted.dup.metrics
 
 
 # Recalibrate
@@ -244,8 +244,8 @@ do
 done
 
 
-less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
-less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
+#less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
+#less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
 
 
 # Get insert size
@@ -261,8 +261,8 @@ do
 done
 
 
-less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
-less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
+#less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
+#less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
 
 
 # Get alignment metrics
@@ -277,8 +277,8 @@ do
 done
 
 
-less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
-less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
+#less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
+#less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
 
 
 
@@ -336,7 +336,7 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
 for i in pairedVariants/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
 
 
-zless -S variants/mpileup.vcf.gz
+#z#less -S variants/mpileup.vcf.gz
 
 
 # SnpEff
@@ -350,7 +350,7 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   > pairedVariants/mpileup.snpeff.vcf
 
 
-less -S pairedVariants/mpileup.snpeff.vcf
+#less -S pairedVariants/mpileup.snpeff.vcf
 
 
 # Coverage Track
