@@ -97,10 +97,10 @@ zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz | head -n4
 You could also just count the reads
 
 ```{.bash}
-zgrep -c "^@HISEQ2" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+zgrep -c "^@HWUSI" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 ```
 
-We should obtain 15546 reads
+We should obtain 4003 reads
 
 **Why shouldn't you just do ?** 
 
@@ -112,7 +112,7 @@ zgrep -c "^@" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 
 ### Quality
-We can't look at all the reads. Especially when working with whole genome 30x data. You could easily have Billions of reads.
+We can't look at all the reads. Especially when working with whole genome 50x data. You could easily have Billions of reads.
 
 Tools like FastQC and BVATools readsqc can be used to plot many metrics from these data sets.
 
@@ -129,13 +129,10 @@ java -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
 
 Open the images
 
-**What stands out in the graphs ?**
-[Solution](solutions/_fastqQC1.md)
-
 All the generated graphics have their uses. But 3 of them are particularly useful to get an overal picture of how good or bad a run went.
-	- The Quality box plots 
-	- The nucleotide content graphs.
-	- The Box plot shows the quality distribution of your data.
+        - The Quality box plots 
+        - The nucleotide content graphs.
+        - The Box plot shows the quality distribution of your data.
  
 The quality of a base is computated using the Phread quality score.
 [notes](notes/_fastQC1.md) 
@@ -156,12 +153,13 @@ Older illumina runs, and the data here, were using phred+64 instead of phred+33 
 ![ACII table](img/ascii_table.png)
 
 
-Of the raw data we see that:
- 
-   - Some reads have bad 3' ends.
-   - Some reads have adapter sequences in them.
+**What stands out in the graphs ?**
+[Solution](solutions/_fastqQC1.md)
 
-**Why do we see adapters ?** [solution](solutions/_adapter1.md)
+
+
+**Why do we see adapters ?** 
+[solution](solutions/_adapter1.md)
 
 Although nowadays this doesn't happen often, it does still happen. In some cases, miRNA, it is expected to have adapters.
 

@@ -1,3 +1,4 @@
-Quality drops towards the ends
-There seem to be spikes in the data, length and quality
-The SRR data set has some adapters in it
+Of the raw data we see that:
+ 
+   - Some reads have bad 3' ends.
+   - Some reads have adapter sequences in them.
