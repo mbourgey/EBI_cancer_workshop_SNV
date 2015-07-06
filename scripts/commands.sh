@@ -11,12 +11,12 @@ export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
 export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.33/trimmomatic-0.33.jar
 export STRELKA_HOME=$APP_ROOT/strelka-1.0.14/
 export MUTECT_JAR=$APP_ROOT/muTect-src/muTect-1.1.7.jar
-export REF=/home/training/ebiCancerWorkshop201507/reference
+export REF=/home/training/ebicancerworkshop201507/reference
 
-cd $HOME/ebiCancerWorkshop201507
+cd $HOME/ebicancerworkshop201507
 
 
-#z#less -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+zless -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 
 
@@ -24,7 +24,7 @@ zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz | head -n4
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz | head -n4
 
 
-zgrep -c "^@HISEQ2" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+zgrep -c "^@HWUSI" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 
 zgrep -c "^@" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
@@ -35,7 +35,7 @@ mkdir originalQC/
 java -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
   --read1 raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz \
   --read2 raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz \
-  --threads 2 --regionName normalD0YR4ACXX_1 --output originalQC/
+  --threads 2 --regionName normalrun62DVGAAXX_1 --output originalQC/
 
 
 cat adapters.fa
@@ -64,7 +64,7 @@ cat reads/normal/run62DVGAAXX_1/normal.trim.out
 
 
 # Align data
-for file in reads/*/run*_?/*.pair1.fastq.gz;
+for file in reads/*/run62*_4/*.pair1.fastq.gz;
 do
   FNAME=`basename $file`;
   DIR=`dirname $file`;
@@ -78,7 +78,7 @@ do
   bwa mem -M -t 3 \
     -R "@RG\\tID:${SNAME}_${RUNID}_${LANE}\\tSM:${SNAME}\\t\
 LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMINA" \
-    ${REF}Homo_sapiens.GRCh37.fa \
+    ${REF}/Homo_sapiens.GRCh37.fa \
     $file \
     ${file%.pair1.fastq.gz}.pair2.fastq.gz \
   | java -Xmx2G -jar ${PICARD_JAR}  SortSam \
@@ -90,28 +90,38 @@ done
 
 # Merge Data
 java -Xmx2G -jar ${PICARD_JAR}  MergeSamFiles \
-  INPUT=alignment/normal/runC0LWRACXX_1/normal.sorted.bam \
-  INPUT=alignment/normal/runC0LWRACXX_6/normal.sorted.bam \
-  INPUT=alignment/normal/runC0PTAACXX_6/normal.sorted.bam \
-  INPUT=alignment/normal/runC0PTAACXX_7/normal.sorted.bam \
-  INPUT=alignment/normal/runC0PTAACXX_8/normal.sorted.bam \
-  INPUT=alignment/normal/runC0R2BACXX_6/normal.sorted.bam \
-  INPUT=alignment/normal/runC0R2BACXX_7/normal.sorted.bam \
-  INPUT=alignment/normal/runC0R2BACXX_8/normal.sorted.bam \
+  INPUT=alignment/normal/run62DPDAAXX_8/normal.sorted.bam \
   INPUT=alignment/normal/run62DVGAAXX_1/normal.sorted.bam \
-  INPUT=alignment/normal/runD0YR4ACXX_2/normal.sorted.bam \
+  INPUT=alignment/normal/run62MK3AAXX_5/normal.sorted.bam \
+  INPUT=alignment/normal/runA81DF6ABXX_1/normal.sorted.bam \
+  INPUT=alignment/normal/runA81DF6ABXX_2/normal.sorted.bam \
+  INPUT=alignment/normal/runBC04D4ACXX_2/normal.sorted.bam \
+  INPUT=alignment/normal/runBC04D4ACXX_3/normal.sorted.bam \
+  INPUT=alignment/normal/runBD06UFACXX_4/normal.sorted.bam \
+  INPUT=alignment/normal/runBD06UFACXX_5/normal.sorted.bam \
   OUTPUT=alignment/normal/normal.sorted.bam \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true
 
 java -Xmx2G -jar ${PICARD_JAR}  MergeSamFiles \
-  INPUT=alignment/tumor/runBC0TV0ACXX_8/tumor.sorted.bam \
-  INPUT=alignment/tumor/runC0LVJACXX_6/tumor.sorted.bam \
-  INPUT=alignment/tumor/runC0PK4ACXX_7/tumor.sorted.bam \
-  INPUT=alignment/tumor/runC0PK4ACXX_8/tumor.sorted.bam \
-  INPUT=alignment/tumor/runC0R29ACXX_7/tumor.sorted.bam \
-  INPUT=alignment/tumor/runC0R29ACXX_8/tumor.sorted.bam \
-  INPUT=alignment/tumor/runC0TTBACXX_3/tumor.sorted.bam \
-  INPUT=alignment/tumor/runD114WACXX_8/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62DU0AAXX_8/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62DUUAAXX_8/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62DVMAAXX_4/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62DVMAAXX_6/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62DVMAAXX_8/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62JREAAXX_4/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62JREAAXX_6/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62JREAAXX_8/tumor.sorted.bam \
+  INPUT=alignment/tumor/runAC0756ACXX_5/tumor.sorted.bam \
+  INPUT=alignment/tumor/runBD08K8ACXX_1/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62DU6AAXX_8/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62DUYAAXX_7/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62DVMAAXX_5/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62DVMAAXX_7/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62JREAAXX_3/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62JREAAXX_5/tumor.sorted.bam \
+  INPUT=alignment/tumor/run62JREAAXX_7/tumor.sorted.bam \
+  INPUT=alignment/tumor/runAC0756ACXX_4/tumor.sorted.bam \
+  INPUT=alignment/tumor/runAD08C1ACXX_1/tumor.sorted.bam
   OUTPUT=alignment/tumor/tumor.sorted.bam \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true
 
@@ -176,7 +186,7 @@ java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
 
 
-#less alignment/normal/normal.sorted.dup.metrics
+less alignment/normal/normal.sorted.dup.metrics
 
 
 # Recalibrate
@@ -244,8 +254,8 @@ do
 done
 
 
-#less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
-#less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
+less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
+less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
 
 
 # Get insert size
@@ -261,8 +271,8 @@ do
 done
 
 
-#less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
-#less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
+less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
+less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
 
 
 # Get alignment metrics
@@ -277,8 +287,8 @@ do
 done
 
 
-#less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
-#less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
+less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
+less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
 
 
 
@@ -336,7 +346,7 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
 for i in pairedVariants/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
 
 
-#z#less -S variants/mpileup.vcf.gz
+zless -S variants/mpileup.vcf.gz
 
 
 # SnpEff
@@ -350,7 +360,7 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   > pairedVariants/mpileup.snpeff.vcf
 
 
-#less -S pairedVariants/mpileup.snpeff.vcf
+less -S pairedVariants/mpileup.snpeff.vcf
 
 
 # Coverage Track
