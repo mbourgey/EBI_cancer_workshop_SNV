@@ -121,7 +121,7 @@ java -Xmx2G -jar ${PICARD_JAR}  MergeSamFiles \
   INPUT=alignment/tumor/run62JREAAXX_5/tumor.sorted.bam \
   INPUT=alignment/tumor/run62JREAAXX_7/tumor.sorted.bam \
   INPUT=alignment/tumor/runAC0756ACXX_4/tumor.sorted.bam \
-  INPUT=alignment/tumor/runAD08C1ACXX_1/tumor.sorted.bam
+  INPUT=alignment/tumor/runAD08C1ACXX_1/tumor.sorted.bam \
   OUTPUT=alignment/tumor/tumor.sorted.bam \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true
 
@@ -152,8 +152,8 @@ java -Xmx2G -jar ${GATK_JAR} \
   -I alignment/normal/normal.sorted.bam \
   -I alignment/tumor/tumor.sorted.bam
 
-  mv normal.sorted.realigned.bam alignment/normal/
-  mv tumor.sorted.realigned.bam alignment/tumor/
+  mv normal.sorted.realigned.ba* alignment/normal/
+  mv tumor.sorted.realigned.ba* alignment/tumor/
 
 
 
@@ -196,8 +196,8 @@ do
     -T BaseRecalibrator \
     -nct 2 \
     -R ${REF}/Homo_sapiens.GRCh37.fa \
-    -knownSites ${REF}/dbSnp-137.vcf.gz \
-    -L 19:50500000-52502000 \
+    -knownSites ${REF}/dbSnp-137_chr9.vcf.gz \
+    -L 9:16695000:-136855000 \
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -I alignment/${i}/${i}.sorted.dup.bam
 
