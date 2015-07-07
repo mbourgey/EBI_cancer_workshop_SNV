@@ -197,7 +197,7 @@ do
     -nct 2 \
     -R ${REF}/Homo_sapiens.GRCh37.fa \
     -knownSites ${REF}/dbSnp-137_chr9.vcf.gz \
-    -L 9:16695000:-136855000 \
+    -L 9:16695000-136855000 \
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -I alignment/${i}/${i}.sorted.dup.bam
 
@@ -221,7 +221,7 @@ do
     -nct 2 \
     -R ${REF}/Homo_sapiens.GRCh37.fa \
     -knownSites ${REF}/dbSnp-137.vcf.gz \
-    -L 19:50500000-52502000 \
+    -L 9:16695000-136855000 \
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.seconnd.grp \
     -I alignment/${i}/${i}.sorted.dup.bam \
     -BQSR alignment/${i}/${i}.sorted.dup.recalibration_report.grp
