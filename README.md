@@ -253,7 +253,6 @@ done
 
 **Could we have done it differently ?** [Solution](solutions/_aln4.md)
 
-We will explore the generated BAM latter if we get enough time.
 
 ## Lane merging
 We now have alignments for each of the sequences lanes:
@@ -298,7 +297,7 @@ java -Xmx2G -jar ${PICARD_JAR}  MergeSamFiles \
   INPUT=alignment/tumor/run62JREAAXX_5/tumor.sorted.bam \
   INPUT=alignment/tumor/run62JREAAXX_7/tumor.sorted.bam \
   INPUT=alignment/tumor/runAC0756ACXX_4/tumor.sorted.bam \
-  INPUT=alignment/tumor/runAD08C1ACXX_1/tumor.sorted.bam
+  INPUT=alignment/tumor/runAD08C1ACXX_1/tumor.sorted.bam \
   OUTPUT=alignment/tumor/tumor.sorted.bam \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true
 
@@ -334,13 +333,16 @@ A full description of the flags can be found in the SAM specification
 http://samtools.sourceforge.net/SAM1.pdf
 
 You can try using picards explain flag site to understand what is going on with your reads
-http://picard.sourceforge.net/explain-flags.html
+http://broadinstitute.github.io/picard/explain-flags.html
 
 The flag is the 2nd column.
 
-**What do the flags of the first 1st and 3rd reads mean?** [solutions](../solutions/_sambam1.md)
+**What do the flags of the first 4th reads mean?** [solutions](../solutions/_sambam1.md)
 
-Let's take the 2nd one, the one that is in proper pair, and find it's pair.
+Exercice:
+**Let's take the 3rd one, the one that is in proper pair, and find it's mate.** [solutions](../solutions/_sambam3.md)
+
+**Why the pairing information is important ?**  [solutions](../solutions/_sambam4.md)
 
 ## SAM/BAM filtering
 
@@ -402,8 +404,8 @@ java -Xmx2G -jar ${GATK_JAR} \
   -I alignment/normal/normal.sorted.bam \
   -I alignment/tumor/tumor.sorted.bam
 
-  mv normal.sorted.realigned.bam alignment/normal/
-  mv tumor.sorted.realigned.bam alignment/tumor/
+  mv normal.sorted.realigned.ba* alignment/normal/
+  mv tumor.sorted.realigned.ba* alignment/tumor/
 
 ```
 **Why did we use both normal and tumor together? ** [Solution](solutions/_realign3.md)
