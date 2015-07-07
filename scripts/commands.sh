@@ -142,7 +142,7 @@ java -Xmx2G  -jar ${GATK_JAR} \
   -o alignment/normal/realign.intervals \
   -I alignment/normal/normal.sorted.bam \
   -I alignment/tumor/tumor.sorted.bam \
-  -L 19
+  -L 9
 
 java -Xmx2G -jar ${GATK_JAR} \
   -T IndelRealigner \
