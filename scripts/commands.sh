@@ -11,6 +11,7 @@ export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
 export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.33/trimmomatic-0.33.jar
 export STRELKA_HOME=$APP_ROOT/strelka-1.0.14/
 export MUTECT_JAR=$APP_ROOT/muTect-src/muTect-1.1.7.jar
+export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
 export REF=/home/training/ebicancerworkshop201507/reference
 
 cd $HOME/ebicancerworkshop201507
@@ -292,14 +293,18 @@ less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
 mkdir pairedVariants
 
 
-# Variants SAMTools
-samtools mpileup -L 1000 -B -q 1 -D -S -g \
+# SAMTools mpileup
+for i in normal tumor
+do
+samtools mpileup -L 1000 -B -q 1 \
   -f ${REF}/Homo_sapiens.GRCh37.fa \
   -r 9:130215000-130636000 \
-  alignment/normal/normal.sorted.dup.recal.bam \
-  alignment/tumor/tumor.sorted.dup.recal.bam \
-  | bcftools view -vcg -T pair - \
-  > pairedVariants/mpileup.vcf
+  alignment/${i}/${i}.sorted.dup.recal.bam \
+  > pairedVariants/${i}.mpileup
+done
+
+# varscan
+java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/paired_varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
 
 
 # Variants MuTecT
@@ -311,7 +316,7 @@ java -Xmx2G -jar ${MUTECT_JAR} \
   -R ${REF}/Homo_sapiens.GRCh37.fa \
   -dt NONE -baq OFF --validation_strictness LENIENT -nt 2 \
   --dbsnp ${REF}/dbSnp-137_chr9.vcf.gz \
-  --cosmic ${REF}/b37_cosmic_v54_120711.vcf \
+  --cosmic ${REF}/b37_cosmic_v70_140903.vcf.gz \
   --input_file:normal alignment/normal/normal.sorted.dup.recal.bam \
   --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
   --out pairedVariants/mutect.call_stats.txt \
