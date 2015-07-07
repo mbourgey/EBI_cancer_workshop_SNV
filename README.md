@@ -507,7 +507,7 @@ do
     -nct 2 \
     -R ${REF}/Homo_sapiens.GRCh37.fa \
     -knownSites ${REF}/dbSnp-137_chr9.vcf.gz \
-    -L 9:16695000-136855000 \
+    -L 9:130215000-130636000 \
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -I alignment/${i}/${i}.sorted.dup.bam
 
@@ -526,28 +526,6 @@ done
 Just to see how things change let's make GATK recalibrate after a first pass
 
 ```{.bash}
-# Check Recalibration
-for i in normal tumor
-do
-  java -Xmx2G -jar ${GATK_JAR} \
-    -T BaseRecalibrator \
-    -nct 2 \
-    -R ${REF}/Homo_sapiens.GRCh37.fa \
-    -knownSites ${REF}/dbSnp-137.vcf.gz \
-    -L 9:16695000-136855000 \
-    -o alignment/${i}/${i}.sorted.dup.recalibration_report.seconnd.grp \
-    -I alignment/${i}/${i}.sorted.dup.bam \
-    -BQSR alignment/${i}/${i}.sorted.dup.recalibration_report.grp
-
-  java -Xmx2G -jar ${GATK_JAR} \
-    -T AnalyzeCovariates \
-    -R ${REF}/Homo_sapiens.GRCh37.fa \
-    -before alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
-    -after alignment/${i}/${i}.sorted.dup.recalibration_report.seconnd.grp \
-    -csv alignment/${i}/BQSR.${i}.csv \
-    -plots alignment/${i}/BQSR.${i}.pdf
-done
-```
 
 
 # Extract BAM metrics
@@ -582,7 +560,7 @@ do
     -R ${REF}/Homo_sapiens.GRCh37.fa \
     -o alignment/${i}/${i}.sorted.dup.recal.coverage \
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
-    -L 19:50500000-52502000 
+    -L 9:130215000-130636000 
 done
 ```
 [note on DepthOfCoverage command](notes/_DOC.md)
@@ -689,7 +667,7 @@ mkdir pairedVariants
 # Variants SAMTools
 samtools mpileup -L 1000 -B -q 1 -D -S -g \
   -f ${REF}/Homo_sapiens.GRCh37.fa \
-  -r 19:50500000-52502000 \
+  -r 9:130215000-130636000 \
   alignment/normal/normal.sorted.dup.recal.bam \
   alignment/tumor/tumor.sorted.dup.recal.bam \
   | bcftools view -vcg -T pair - \
@@ -709,7 +687,7 @@ java -Xmx2G -jar ${MUTECT_JAR} \
   -T MuTect \
   -R ${REF}/Homo_sapiens.GRCh37.fa \
   -dt NONE -baq OFF --validation_strictness LENIENT -nt 2 \
-  --dbsnp ${REF}/dbSnp-137.vcf.gz \
+  --dbsnp ${REF}/dbSnp-137_chr9.vcf.gz \
   --cosmic ${REF}/b37_cosmic_v54_120711.vcf \
   --input_file:normal alignment/normal/normal.sorted.dup.recal.bam \
   --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
@@ -717,7 +695,7 @@ java -Xmx2G -jar ${MUTECT_JAR} \
   --coverage_file pairedVariants/mutect.wig.txt \
   -pow pairedVariants/mutect.power \
   -vcf pairedVariants/mutect.vcf \
-  -L 19:50500000-52502000
+  -L 9:130215000-130636000
 ```
 
 ## Illumina Strelka

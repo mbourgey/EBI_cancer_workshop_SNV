@@ -197,7 +197,7 @@ do
     -nct 2 \
     -R ${REF}/Homo_sapiens.GRCh37.fa \
     -knownSites ${REF}/dbSnp-137_chr9.vcf.gz \
-    -L 9:16695000-136855000 \
+    -L 9:130215000-130636000 \
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -I alignment/${i}/${i}.sorted.dup.bam
 
@@ -213,29 +213,26 @@ done
 
 
 
-# Check Recalibration
-for i in normal tumor
-do
-  java -Xmx2G -jar ${GATK_JAR} \
-    -T BaseRecalibrator \
-    -nct 2 \
-    -R ${REF}/Homo_sapiens.GRCh37.fa \
-    -knownSites ${REF}/dbSnp-137.vcf.gz \
-    -L 9:16695000-136855000 \
-    -o alignment/${i}/${i}.sorted.dup.recalibration_report.seconnd.grp \
-    -I alignment/${i}/${i}.sorted.dup.bam \
-    -BQSR alignment/${i}/${i}.sorted.dup.recalibration_report.grp
-
-  java -Xmx2G -jar ${GATK_JAR} \
-    -T AnalyzeCovariates \
-    -R ${REF}/Homo_sapiens.GRCh37.fa \
-    -before alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
-    -after alignment/${i}/${i}.sorted.dup.recalibration_report.seconnd.grp \
-    -csv alignment/${i}/BQSR.${i}.csv \
-    -plots alignment/${i}/BQSR.${i}.pdf
-done
 
 
+# Extract BAM metrics
+Once your whole bam is generated, it's always a good thing to check the data again to see if everything makes sens.
+
+**Compute coverage**
+If you have data from a capture kit, you should see how well your targets worked
+
+**Insert Size**
+It tells you if your library worked
+
+**Alignment metrics**
+It tells you if your sample and you reference fit together
+
+## Compute coverage
+Both GATK and BVATools have depth of coverage tools. 
+
+Here we'll use the GATK one
+
+```{.bash}
 # Get Depth
 for i in normal tumor
 do
@@ -250,7 +247,7 @@ do
     -R ${REF}/Homo_sapiens.GRCh37.fa \
     -o alignment/${i}/${i}.sorted.dup.recal.coverage \
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
-    -L 19:50500000-52502000 
+    -L 9:130215000-130636000 
 done
 
 
@@ -298,7 +295,7 @@ mkdir pairedVariants
 # Variants SAMTools
 samtools mpileup -L 1000 -B -q 1 -D -S -g \
   -f ${REF}/Homo_sapiens.GRCh37.fa \
-  -r 19:50500000-52502000 \
+  -r 9:130215000-130636000 \
   alignment/normal/normal.sorted.dup.recal.bam \
   alignment/tumor/tumor.sorted.dup.recal.bam \
   | bcftools view -vcg -T pair - \
@@ -313,7 +310,7 @@ java -Xmx2G -jar ${MUTECT_JAR} \
   -T MuTect \
   -R ${REF}/Homo_sapiens.GRCh37.fa \
   -dt NONE -baq OFF --validation_strictness LENIENT -nt 2 \
-  --dbsnp ${REF}/dbSnp-137.vcf.gz \
+  --dbsnp ${REF}/dbSnp-137_chr9.vcf.gz \
   --cosmic ${REF}/b37_cosmic_v54_120711.vcf \
   --input_file:normal alignment/normal/normal.sorted.dup.recal.bam \
   --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
@@ -321,7 +318,7 @@ java -Xmx2G -jar ${MUTECT_JAR} \
   --coverage_file pairedVariants/mutect.wig.txt \
   -pow pairedVariants/mutect.power \
   -vcf pairedVariants/mutect.vcf \
-  -L 19:50500000-52502000
+  -L 9:130215000-130636000
 
 
 # Variants Strelka
