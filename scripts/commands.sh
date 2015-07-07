@@ -10,7 +10,7 @@ export GATK_JAR=$APP_ROOT/gatk/GenomeAnalysisTK.jar
 export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
 export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.33/trimmomatic-0.33.jar
 export STRELKA_HOME=$APP_ROOT/strelka-1.0.14/
-export MUTECT_JAR=$APP_ROOT/muTect-src/muTect-1.1.7.jar
+export MUTECT_JAR=$APP_ROOT/mutect-src/mutect-1.1.7.jar
 export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
 export REF=/home/training/ebicancerworkshop201507/reference
 
@@ -304,7 +304,7 @@ samtools mpileup -L 1000 -B -q 1 \
 done
 
 # varscan
-java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/paired_varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
 
 
 # Variants MuTecT
@@ -335,12 +335,12 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
   --normal=alignment/normal/normal.sorted.dup.recal.bam \
   --tumor=alignment/tumor/tumor.sorted.dup.recal.bam \
   --ref=${REF}/Homo_sapiens.GRCh37.fa \
-  --config=strelka_config_bwa_default.ini \
+  --config=$(pwd)/strelka_config_bwa_default.ini \
   --output-dir=pairedVariants/strelka/
 
   cd pairedVariants/strelka/
   make -j3
-  cd $HOME/ebiCancerWorkshop201407
+  cd ebicancerworkshop201507
 
   cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
 
