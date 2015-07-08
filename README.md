@@ -729,7 +729,7 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
 
   cd pairedVariants/strelka/
   make -j3
-  cd ebicancerworkshop201507
+  cd ../..
 
   cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
 ```
@@ -743,7 +743,7 @@ for i in pairedVariants/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
 Let's look at a compressed vcf.
 
 ```{.bash}
-zless -S variants/mpileup.vcf.gz
+zless -S pairedVariants/varscan.snp.vcf.gz
 ```
 Details on the spec can be found here:
 http://vcftools.sourceforge.net/specs.html
@@ -769,10 +769,10 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
   -o vcf \
   -i vcf \
-  -stats pairedVariants/mpileup.snpeff.vcf.stats.html \
+  -stats pairedVariants/varscan.snpeff.vcf.stats.html \
   hg19 \
-  pairedVariants/mpileup.vcf \
-  > pairedVariants/mpileup.snpeff.vcf
+  pairedVariants/paired_varscan.snp.vcf \
+  > pairedVariants/varscan.snpeff.vcf
 ```
 
 Look at the new vcf file:
@@ -781,8 +781,10 @@ Look at the new vcf file:
 less -S pairedVariants/mpileup.snpeff.vcf
 ```
 
-**Can you see the difference with the previous vcf ?**[solution](solutions/_snpeff1.md)
+**Can you see the difference with the previous vcf ?** [solution](solutions/_snpeff1.md)
 
+Exercice: 
+**Find a somatic mutation with a predicted High or Moderate impact** [solution](solutions/_snpeff2.md)
 
 For now we will not explore this step since you will be working with gene annotations in your next workshop.
 
