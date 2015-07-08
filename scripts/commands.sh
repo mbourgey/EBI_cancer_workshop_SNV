@@ -340,7 +340,7 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
 
   cd pairedVariants/strelka/
   make -j3
-  cd ebicancerworkshop201507
+  cd ../..
 
   cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
 
@@ -348,7 +348,7 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
 for i in pairedVariants/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
 
 
-zless -S variants/mpileup.vcf.gz
+zless -S pairedVariants/varscan.snp.vcf.gz
 
 
 # SnpEff
@@ -356,10 +356,10 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
   -o vcf \
   -i vcf \
-  -stats pairedVariants/mpileup.snpeff.vcf.stats.html \
+  -stats pairedVariants/varscan.snpeff.vcf.stats.html \
   hg19 \
-  pairedVariants/mpileup.vcf \
-  > pairedVariants/mpileup.snpeff.vcf
+  pairedVariants/paired_varscan.snp.vcf \
+  > pairedVariants/varscan.snpeff.vcf
 
 
 less -S pairedVariants/mpileup.snpeff.vcf
