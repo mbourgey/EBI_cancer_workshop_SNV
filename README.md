@@ -1,6 +1,6 @@
 
 # Introduction to DNA-Seq processing for cancer data
-***By Mathieu Bourgey, Ph.D***
+***By Mathieu Bourgey, Ph.D***  
 *https://bitbucket.org/mugqic/mugqic_pipelines*
 
 In this workshop, we will present the main steps that are commonly used to process and to analyze cancer sequencing data. We will focus only on whole genome data and provide command lines that allow detecting Single Nucleotide Variants (SNV). This workshop will show you how to launch individual steps of a complete DNA-Seq SNV pipeline using cancer data
