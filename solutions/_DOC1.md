@@ -1,4 +1,4 @@
-Yes the mean coverage of the region is 36x:
+Yes the mean coverage of the region is 43x for the normal sample and 51 for the tumor sample:
 
 	summaryCoverageThreshold is a useful function to see if your coverage is uniform.
  

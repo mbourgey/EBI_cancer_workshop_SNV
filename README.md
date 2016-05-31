@@ -522,11 +522,6 @@ do
 done
 ```
 
-```
-
-Just to see how things change let's make GATK recalibrate after a first pass
-
-```{.bash}
 
 
 # Extract BAM metrics
@@ -605,9 +600,11 @@ less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
 less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
 ```
 
-There is something interesting going on with our library ERR.
+There is something interesting going on with our libraries.
 
 **Can you tell what it is?** [Solution](solutions/_insert1.md)
+
+**Which library is the most suitable for cancer analysis ?** [Solution](solutions/_insert2.md)
 
 ## Alignment metrics
 For the alignment metrics, samtools flagstat is very fast but with bwa-mem since some reads get broken into pieces, the numbers are a bit confusing. 
