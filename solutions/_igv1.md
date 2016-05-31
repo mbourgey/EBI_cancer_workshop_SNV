@@ -1,9 +1,9 @@
 some commands to find somatic variant in the vcf file
 
-## SAMtools
+## varscan
 
 ```{.bash}
-grep "SOMATIC" pairedVariants/varscan.vcf | | grep -v "^#"
+grep SOMATIC pairedVariants/varscan.vcf 
 ```
 
 ## MuTecT
@@ -13,7 +13,7 @@ grep -v REJECT pairedVariants/mutect.vcf | grep -v "^#"
 
 ## Strelka
 ```{.bash}
- grep -v "^#" pairedVariants/strelka.vcf
+grep -v "^#" pairedVariants/strelka.vcf
 ```
 
 

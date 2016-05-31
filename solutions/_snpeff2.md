@@ -1,7 +1,5 @@
-this can be done using this command:
+There is many tools you can use to  explore vcf (vcftools, GEMIN ...) but for such a simple task the easiest way is tu use the old good grep command:
 
-```{.bash}
-grep "HIGH\|MODERATE" pairedVariants/varscan.snpeff.vcf | grep "SOMATIC" | less
 ```
-
-A missens mutation in AK1 is predicted to have a moderate impact on the protein
+grep "HIGH\|MODERATE"  pairedVariants/varscan.snpeff.vcf | grep SOMATIC | less
+```

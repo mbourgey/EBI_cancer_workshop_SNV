@@ -1,6 +1,7 @@
 
 # Introduction to DNA-Seq processing for cancer data
-***By Mathieu Bourgey, Ph.D***
+***By Mathieu Bourgey, Ph.D***  
+*https://bitbucket.org/mugqic/mugqic_pipelines*
 
 In this workshop, we will present the main steps that are commonly used to process and to analyze cancer sequencing data. We will focus only on whole genome data and provide command lines that allow detecting Single Nucleotide Variants (SNV). This workshop will show you how to launch individual steps of a complete DNA-Seq SNV pipeline using cancer data
 
@@ -25,7 +26,7 @@ The initial structure of your folders should look like this:
         `-- run*_?           # Lane directory by run number. Contains the fastqs
     `-- tumor                # The tumor sample directory
         `-- run*_?           # Lane directory by run number. Contains the fastqs
-`-- project.nanuq.csv        # sample sheet
+`-- commands.sh              # cheat sheet
 ```
 
 
@@ -176,7 +177,7 @@ The adapter file is in your work folder.
 cat adapters.fa
 ```
 
-**Why are there 2 different ones ?** [Solution](/solutions/_trim1.md)
+**Why are there 2 different ones ?** [Solution](solutions/_trim1.md)
 
 
 trimming with trimmomatic:
@@ -338,19 +339,19 @@ http://broadinstitute.github.io/picard/explain-flags.html
 
 The flag is the 2nd column.
 
-**What do the flags of the first 4th reads mean?** [solutions](../solutions/_sambam1.md)
+**What do the flags of the first 4th reads mean?** [solutions](solutions/_sambam1.md)
 
 Exercice:
-**Let's take the 3rd one, the one that is in proper pair, and find it's mate.** [solutions](../solutions/_sambam3.md)
+**Let's take the 3rd one, the one that is in proper pair, and find it's mate.** [solutions](solutions/_sambam3.md)
 
-**Why the pairing information is important ?**  [solutions](../solutions/_sambam4.md)
+**Why the pairing information is important ?**  [solutions](solutions/_sambam4.md)
 
 ## SAM/BAM filtering
 
 You can use samtools to filter reads as well.
 
 Exercice:
-**How many reads mapped and unmapped were there?** [solution](../solutions/_sambam2.md)
+**How many reads mapped and unmapped were there?** [solution](solutions/_sambam2.md)
 
 
 ## SAM/BAM CIGAR string
