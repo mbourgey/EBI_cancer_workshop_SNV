@@ -47,7 +47,7 @@ export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.36/trimmomatic-0.36.jar
 export STRELKA_HOME=$APP_ROOT/strelka-1.0.15/
 export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
 export BCBIO_VARIATION_JAR=$APP_ROOT/bcbio.variation/bcbio.variation-0.2.6-standalone.jar
-export REF=/home/training/ebicancerworkshop201507/reference
+export REF=/home/training/ebicancerworkshop201607/reference
 
 cd $HOME/ebicancerworkshop201507
 ```
