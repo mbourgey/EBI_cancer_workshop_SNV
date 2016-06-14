@@ -12,7 +12,7 @@ export REF=/home/training/ebicancerworkshop201607/reference
 
 
 cd $HOME/ebicancerworkshop201607/SNV
-zless -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+#z#less -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz | head -n4
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz | head -n4
@@ -150,7 +150,7 @@ java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   INPUT=alignment/tumor/tumor.matefixed.bam \
   OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
   METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
-less alignment/normal/normal.sorted.dup.metrics
+#less alignment/normal/normal.sorted.dup.metrics
 # Recalibrate
 for i in normal tumor
 do
@@ -187,8 +187,8 @@ do
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -L 9:130215000-130636000 
 done
-less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
-less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
+#less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
+#less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
 # Get insert size
 for i in normal tumor
 do
@@ -200,8 +200,8 @@ do
     HISTOGRAM_FILE=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.histo.pdf \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
-less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
-less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
+#less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
+#less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
 # Get alignment metrics
 for i in normal tumor
 do
@@ -212,8 +212,8 @@ do
     OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.alignment.tsv \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
-less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
-less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
+#less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
+#less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
 
 mkdir pairedVariants
 # SAMTools mpileup
@@ -262,7 +262,7 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
 
   cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
 for i in pairedVariants/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
-zless -S pairedVariants/varscan.snp.vcf.gz
+#z#less -S pairedVariants/varscan.snp.vcf.gz
 # SnpEff
 java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
@@ -272,7 +272,7 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   hg19 \
   pairedVariants/paired_varscan.snp.vcf \
   > pairedVariants/varscan.snpeff.vcf
-less -S pairedVariants/mpileup.snpeff.vcf
+#less -S pairedVariants/mpileup.snpeff.vcf
 # Coverage Track
 for i in normal tumor
 do
