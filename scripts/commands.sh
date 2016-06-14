@@ -4,15 +4,19 @@ export PICARD_JAR=$APP_ROOT/picard-tools/picard.jar
 export SNPEFF_HOME=$APP_ROOT/snpEff/
 export GATK_JAR=$APP_ROOT/gatk/GenomeAnalysisTK.jar
 export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
-export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.33/trimmomatic-0.33.jar
-export STRELKA_HOME=$APP_ROOT/strelka-1.0.14/
-export MUTECT_JAR=$APP_ROOT/mutect-src/mutect-1.1.7.jar
+export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.36/trimmomatic-0.36.jar
+export STRELKA_HOME=$APP_ROOT/strelka-1.0.15/
 export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
+<<<<<<< HEAD
 export BCBIO_VARIATION_JAR=$APP_ROOT/??
 export REF=/home/training/ebicancerworkshop201507/reference
+=======
+export BCBIO_VARIATION_JAR=$APP_ROOT/bcbio.variation/bcbio.variation-0.2.6-standalone.jar
+export REF=/home/training/ebicancerworkshop201607/reference
+>>>>>>> 571c8ca6ce3ca3e40ce6f2c6ccfc1bbd7e8c7752
 
-cd $HOME/ebicancerworkshop201507
-#zless -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+cd $HOME/ebicancerworkshop201507/SNV
+zless -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz | head -n4
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz | head -n4
@@ -150,7 +154,7 @@ java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   INPUT=alignment/tumor/tumor.matefixed.bam \
   OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
   METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
-#less alignment/normal/normal.sorted.dup.metrics
+less alignment/normal/normal.sorted.dup.metrics
 # Recalibrate
 for i in normal tumor
 do
@@ -187,8 +191,8 @@ do
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -L 9:130215000-130636000 
 done
-#less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
-#less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
+less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
+less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
 # Get insert size
 for i in normal tumor
 do
@@ -200,8 +204,8 @@ do
     HISTOGRAM_FILE=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.histo.pdf \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
-#less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
-#less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
+less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
+less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
 # Get alignment metrics
 for i in normal tumor
 do
@@ -212,8 +216,8 @@ do
     OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.alignment.tsv \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
-#less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
-#less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
+less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
+less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
 
 mkdir pairedVariants
 # SAMTools mpileup
@@ -261,10 +265,8 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
   cd ../..
 
   cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
-
-  
 for i in pairedVariants/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
-#zless -S pairedVariants/varscan.snp.vcf.gz
+zless -S pairedVariants/varscan.snp.vcf.gz
 # SnpEff
 java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
@@ -274,7 +276,7 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   hg19 \
   pairedVariants/paired_varscan.snp.vcf \
   > pairedVariants/varscan.snpeff.vcf
-#less -S pairedVariants/mpileup.snpeff.vcf
+less -S pairedVariants/mpileup.snpeff.vcf
 # Coverage Track
 for i in normal tumor
 do
