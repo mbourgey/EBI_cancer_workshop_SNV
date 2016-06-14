@@ -20,6 +20,7 @@ This work is licensed under a [Creative Commons Attribution-ShareAlike 3.0 Unpor
 
 The initial structure of your folders should look like this:
 ```
+cd SNV_practical
 <ROOT>
 |-- raw_reads/               # fastqs from the center (down sampled)
     `-- normal               # The blood sample directory
@@ -47,6 +48,7 @@ export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.33/trimmomatic-0.33.jar
 export STRELKA_HOME=$APP_ROOT/strelka-1.0.14/
 export MUTECT_JAR=$APP_ROOT/mutect-src/mutect-1.1.7.jar
 export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
+export BCBIO_VARIATION_JAR=$APP_ROOT/??
 export REF=/home/training/ebicancerworkshop201507/reference
 
 cd $HOME/ebicancerworkshop201507
@@ -55,7 +57,6 @@ cd $HOME/ebicancerworkshop201507
 ### Software requirements
 These are all already installed, but here are the original links.
 
-  * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
   * [BVATools](https://bitbucket.org/mugqic/bvatools/downloads)
   * [SAMTools](http://sourceforge.net/projects/samtools/)
   * [IGV](http://www.broadinstitute.org/software/igv/download)
@@ -215,6 +216,8 @@ Exercice:
 
 **How does it look now ?** [Solution](solutions/_trim3.md)
 
+__TO DO: check for trimming with sliding windows__
+
 
 # Alignment
 The raw reads are now cleaned up of artefacts we can align each lane separatly.
@@ -227,7 +230,7 @@ The raw reads are now cleaned up of artefacts we can align each lane separatly.
 
 ```{.bash}
 # Align data
-for file in reads/*/run62*_4/*.pair1.fastq.gz;
+for file in reads/*/run*/*.pair1.fastq.gz;
 do
   FNAME=`basename $file`;
   DIR=`dirname $file`;
@@ -463,13 +466,13 @@ Here we will use picards approach:
 ```{.bash}
 # Mark Duplicates
 java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
-  REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
+  REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
   INPUT=alignment/normal/normal.matefixed.bam \
   OUTPUT=alignment/normal/normal.sorted.dup.bam \
   METRICS_FILE=alignment/normal/normal.sorted.dup.metrics
 
 java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
-  REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
+  REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
   INPUT=alignment/tumor/tumor.matefixed.bam \
   OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
   METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
@@ -643,7 +646,7 @@ Most of SNV caller use either a Baysian, a threshold or a t-test approach to do 
 
  Here we will try 3 variant callers.
 - Varscan 2
-- MuTecT
+- MuTecT2
 - Strelka
 
 Other candidates
@@ -695,8 +698,8 @@ java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVari
 # Note MuTecT only works with Java 6, 7 will give you an error
 # if you get "Comparison method violates its general contract!
 # you used java 7"
-java -Xmx2G -jar ${MUTECT_JAR} \
-  -T MuTect \
+java -Xmx2G -jar ${GATK_JAR} \
+  -T MuTect2 \
   -R ${REF}/Homo_sapiens.GRCh37.fa \
   -dt NONE -baq OFF --validation_strictness LENIENT -nt 2 \
   --dbsnp ${REF}/dbSnp-137_chr9.vcf.gz \
@@ -705,8 +708,7 @@ java -Xmx2G -jar ${MUTECT_JAR} \
   --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
   --out pairedVariants/mutect.call_stats.txt \
   --coverage_file pairedVariants/mutect.wig.txt \
-  -pow pairedVariants/mutect.power \
-  -vcf pairedVariants/mutect.vcf \
+  -vcf pairedVariants/mutect2.vcf \
   -L 9:130215000-130636000
 ```
 
@@ -731,6 +733,17 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
 
   cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
 ```
+
+
+## Intersecting the vcfs
+
+```.{bash}
+java -Xmx2G -jar $BCBIO_VARIATION_JAR \
+  variant-ensemble \
+  tumor_pair_ensemble.yaml \
+  ${REF}/Homo_sapiens.GRCh37.fa \
+  pairedVariants/ensemble/ensemble.vcf \
+  pairedVariants/mutect.vcf pairedVariants/cktest/cktest.vardict.somatic.vcf.gz pairedVariants/cktest/cktest.samtools.somatic.vcf.gz
 
 Now we have variants from all three methods. Let's compress and index the vcfs for futur visualisation.
 
