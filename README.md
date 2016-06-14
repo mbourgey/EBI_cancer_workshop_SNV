@@ -512,7 +512,7 @@ do
     -T BaseRecalibrator \
     -nct 2 \
     -R ${REF}/Homo_sapiens.GRCh37.fa \
-    -knownSites ${REF}/dbSnp-137_chr9.vcf.gz \
+    -knownSites ${REF}/dbSnp-137_chr9.vcf \
     -L 9:130215000-130636000 \
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -I alignment/${i}/${i}.sorted.dup.bam
@@ -702,14 +702,12 @@ java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVari
 java -Xmx2G -jar ${GATK_JAR} \
   -T MuTect2 \
   -R ${REF}/Homo_sapiens.GRCh37.fa \
-  -dt NONE -baq OFF --validation_strictness LENIENT -nt 2 \
-  --dbsnp ${REF}/dbSnp-137_chr9.vcf.gz \
+  -dt NONE -baq OFF --validation_strictness LENIENT \
+  --dbsnp ${REF}/dbSnp-137_chr9.vcf \
   --cosmic ${REF}/b37_cosmic_v70_140903.vcf.gz \
   --input_file:normal alignment/normal/normal.sorted.dup.recal.bam \
   --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
-  --out pairedVariants/mutect.call_stats.txt \
-  --coverage_file pairedVariants/mutect.wig.txt \
-  -vcf pairedVariants/mutect2.vcf \
+  --out pairedVariants/mutect2.vcf \
   -L 9:130215000-130636000
 ```
 
@@ -738,7 +736,7 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
 
 ## Intersecting the vcfs
 
-```.{bash}
+```{.bash}
 java -Xmx2G -jar $BCBIO_VARIATION_JAR \
   variant-ensemble \
   tumor_pair_ensemble.yaml \
