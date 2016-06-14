@@ -7,15 +7,11 @@ export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
 export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.36/trimmomatic-0.36.jar
 export STRELKA_HOME=$APP_ROOT/strelka-1.0.15/
 export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
-<<<<<<< HEAD
-export BCBIO_VARIATION_JAR=$APP_ROOT/??
-export REF=/home/training/ebicancerworkshop201507/reference
-=======
 export BCBIO_VARIATION_JAR=$APP_ROOT/bcbio.variation/bcbio.variation-0.2.6-standalone.jar
 export REF=/home/training/ebicancerworkshop201607/reference
->>>>>>> 571c8ca6ce3ca3e40ce6f2c6ccfc1bbd7e8c7752
 
-cd $HOME/ebicancerworkshop201507/SNV
+
+cd $HOME/ebicancerworkshop201607/SNV
 zless -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz | head -n4
