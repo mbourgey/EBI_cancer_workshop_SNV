@@ -49,7 +49,7 @@ export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
 export BCBIO_VARIATION_JAR=$APP_ROOT/bcbio.variation/bcbio.variation-0.2.6-standalone.jar
 export REF=/home/training/ebicancerworkshop201607/reference
 
-cd $HOME/ebicancerworkshop201507
+cd $HOME/ebicancerworkshop201507/SNV
 ```
 
 ### Software requirements
