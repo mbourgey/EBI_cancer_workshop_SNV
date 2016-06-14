@@ -52,6 +52,7 @@ export REF=/home/training/ebicancerworkshop201607/reference
 
 
 cd $HOME/ebicancerworkshop201607/SNV
+
 ```
 
 ### Software requirements
@@ -92,6 +93,7 @@ Now try these commands:
 ```{.bash}
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz | head -n4
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz | head -n4
+
 ```
 
 **What was special about the output ?**
@@ -102,6 +104,7 @@ You could also just count the reads
 
 ```{.bash}
 zgrep -c "^@HWUSI" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+
 ```
 
 We should obtain 4003 reads
@@ -110,6 +113,7 @@ We should obtain 4003 reads
 
 ```{.bash}
 zgrep -c "^@" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+
 ```
 
 [Solution](solutions/_fastq3.md)
@@ -129,6 +133,7 @@ java -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
   --read1 raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz \
   --read2 raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz \
   --threads 2 --regionName normalrun62DVGAAXX_1 --output originalQC/
+  
 ```
 
 Open the images
@@ -177,6 +182,7 @@ The adapter file is in your work folder.
 
 ```{.bash}
 cat adapters.fa
+
 ```
 
 **Why are there 2 different ones ?** [Solution](solutions/_trim1.md)
@@ -206,6 +212,7 @@ do
 done
 
 cat reads/normal/run62DVGAAXX_1/normal.trim.out
+
 ```
 
 [note on trimmomatic command](notes/_trimmomatic.md)
@@ -253,6 +260,7 @@ LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMI
     OUTPUT=${OUTPUT_DIR}/${SNAME}.sorted.bam \
     CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000
 done
+
 ```
  
 **Why did we pipe the output of one to the other ?** [Solution](solutions/_aln3.md)
@@ -332,6 +340,7 @@ Let's spend some time to explore bam files.
 
 ```{.bash}
 samtools view alignment/normal/normal.sorted.bam | head -n4
+
 ```
 
 Here you have examples of alignment results.
@@ -453,6 +462,7 @@ java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
   INPUT=alignment/tumor/tumor.sorted.realigned.bam \
   OUTPUT=alignment/tumor/tumor.matefixed.bam
+  
 ```
 
 ## Mark duplicates
@@ -477,12 +487,14 @@ java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   INPUT=alignment/tumor/tumor.matefixed.bam \
   OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
   METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
+  
 ```
 
 We can look in the metrics output to see what happened.
 
 ```{.bash}
 less alignment/normal/normal.sorted.dup.metrics
+
 ```
 
 **How many duplicates were there ?** [Solution](solutions/_markdup4.md)
@@ -525,6 +537,7 @@ do
       -o alignment/${i}/${i}.sorted.dup.recal.bam \
       -I alignment/${i}/${i}.sorted.dup.bam
 done
+
 ```
 
 
@@ -563,6 +576,7 @@ do
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -L 9:130215000-130636000 
 done
+
 ```
 [note on DepthOfCoverage command](notes/_DOC.md)
 
@@ -573,6 +587,7 @@ Look at the coverage:
 ```{.bash}
 less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
 less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
+
 ```
 
 **Is the coverage fit with the expectation ?** [solution](solutions/_DOC1.md)
@@ -596,6 +611,7 @@ do
     HISTOGRAM_FILE=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.histo.pdf \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
+
 ```
 
 look at the output
@@ -603,6 +619,7 @@ look at the output
 ```{.bash}
 less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
 less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
+
 ```
 
 There is something interesting going on with our libraries.
@@ -627,6 +644,7 @@ do
     OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.alignment.tsv \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
+
 ```
 
 explore the results
@@ -661,6 +679,7 @@ In our case, let's start with:
 
 ```{.bash}
 mkdir pairedVariants
+
 ```
 
 ## varscan 2
@@ -688,6 +707,7 @@ done
 
 # varscan
 java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+
 ```
 
 [note on samtools mpileup and bcftools command](notes/_mpileup.md)
@@ -709,6 +729,7 @@ java -Xmx2G -jar ${GATK_JAR} \
   --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
   --out pairedVariants/mutect2.vcf \
   -L 9:130215000-130636000
+  
 ```
 
 ## Illumina Strelka
@@ -731,6 +752,7 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
   cd ../..
 
   cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
+
 ```
 
 
@@ -743,6 +765,8 @@ java -Xmx2G -jar $BCBIO_VARIATION_JAR \
   ${REF}/Homo_sapiens.GRCh37.fa \
   pairedVariants/ensemble/ensemble.vcf \
   pairedVariants/mutect.vcf pairedVariants/cktest/cktest.vardict.somatic.vcf.gz pairedVariants/cktest/cktest.samtools.somatic.vcf.gz
+
+```
 
 Now we have variants from all three methods. Let's compress and index the vcfs for futur visualisation.
 

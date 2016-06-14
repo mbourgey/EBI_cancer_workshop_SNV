@@ -12,19 +12,25 @@ export REF=/home/training/ebicancerworkshop201607/reference
 
 
 cd $HOME/ebicancerworkshop201607/SNV
-zless -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+
+#z#less -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz | head -n4
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz | head -n4
+
 zgrep -c "^@HWUSI" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+
 zgrep -c "^@" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+
 # Generate original QC
 mkdir originalQC/
 java -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
   --read1 raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz \
   --read2 raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz \
   --threads 2 --regionName normalrun62DVGAAXX_1 --output originalQC/
+  
 cat adapters.fa
+
 # Trim and convert data
 for file in raw_reads/*/run*_?/*.pair1.fastq.gz;
 do
@@ -45,6 +51,7 @@ do
 done
 
 cat reads/normal/run62DVGAAXX_1/normal.trim.out
+
 # Align data
 for file in reads/*/run*/*.pair1.fastq.gz;
 do
@@ -68,6 +75,7 @@ LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMI
     OUTPUT=${OUTPUT_DIR}/${SNAME}.sorted.bam \
     CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000
 done
+
 # Merge Data
 java -Xmx2G -jar ${PICARD_JAR}  MergeSamFiles \
   INPUT=alignment/normal/run62DPDAAXX_8/normal.sorted.bam \
@@ -109,6 +117,7 @@ ls -l alignment/normal/
 samtools view -H alignment/normal/normal.sorted.bam | grep "^@RG"
 
 samtools view alignment/normal/normal.sorted.bam | head -n4
+
 # Realign
 java -Xmx2G  -jar ${GATK_JAR} \
   -T RealignerTargetCreator \
@@ -138,6 +147,7 @@ java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
   INPUT=alignment/tumor/tumor.sorted.realigned.bam \
   OUTPUT=alignment/tumor/tumor.matefixed.bam
+  
 # Mark Duplicates
 java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
@@ -150,7 +160,9 @@ java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   INPUT=alignment/tumor/tumor.matefixed.bam \
   OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
   METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
-less alignment/normal/normal.sorted.dup.metrics
+  
+#less alignment/normal/normal.sorted.dup.metrics
+
 # Recalibrate
 for i in normal tumor
 do
@@ -171,6 +183,7 @@ do
       -o alignment/${i}/${i}.sorted.dup.recal.bam \
       -I alignment/${i}/${i}.sorted.dup.bam
 done
+
 # Get Depth
 for i in normal tumor
 do
@@ -187,8 +200,10 @@ do
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -L 9:130215000-130636000 
 done
-less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
-less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
+
+#less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
+#less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
+
 # Get insert size
 for i in normal tumor
 do
@@ -200,8 +215,10 @@ do
     HISTOGRAM_FILE=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.histo.pdf \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
-less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
-less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
+
+#less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
+#less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
+
 # Get alignment metrics
 for i in normal tumor
 do
@@ -212,10 +229,12 @@ do
     OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.alignment.tsv \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
-less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
-less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
+
+#less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
+#less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
 
 mkdir pairedVariants
+
 # SAMTools mpileup
 for i in normal tumor
 do
@@ -228,6 +247,7 @@ done
 
 # varscan
 java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+
 # Variants MuTecT
 # Note MuTecT only works with Java 6, 7 will give you an error
 # if you get "Comparison method violates its general contract!
@@ -242,6 +262,7 @@ java -Xmx2G -jar ${GATK_JAR} \
   --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
   --out pairedVariants/mutect2.vcf \
   -L 9:130215000-130636000
+  
 # Variants Strelka
 cp ${STRELKA_HOME}/etc/strelka_config_bwa_default.ini ./
 # Fix ini since we subsampled
@@ -259,6 +280,7 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
   cd ../..
 
   cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
+
 java -Xmx2G -jar $BCBIO_VARIATION_JAR \
   variant-ensemble \
   tumor_pair_ensemble.yaml \
@@ -266,11 +288,8 @@ java -Xmx2G -jar $BCBIO_VARIATION_JAR \
   pairedVariants/ensemble/ensemble.vcf \
   pairedVariants/mutect.vcf pairedVariants/cktest/cktest.vardict.somatic.vcf.gz pairedVariants/cktest/cktest.samtools.somatic.vcf.gz
 
-Now we have variants from all three methods. Let's compress and index the vcfs for futur visualisation.
-
-```{.bash}
 for i in pairedVariants/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
-zless -S pairedVariants/varscan.snp.vcf.gz
+#z#less -S pairedVariants/varscan.snp.vcf.gz
 # SnpEff
 java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
@@ -280,7 +299,7 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   hg19 \
   pairedVariants/paired_varscan.snp.vcf \
   > pairedVariants/varscan.snpeff.vcf
-less -S pairedVariants/mpileup.snpeff.vcf
+#less -S pairedVariants/mpileup.snpeff.vcf
 # Coverage Track
 for i in normal tumor
 do
