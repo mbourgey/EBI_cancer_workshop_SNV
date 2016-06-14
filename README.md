@@ -43,10 +43,10 @@ export PICARD_JAR=$APP_ROOT/picard-tools/picard.jar
 export SNPEFF_HOME=$APP_ROOT/snpEff/
 export GATK_JAR=$APP_ROOT/gatk/GenomeAnalysisTK.jar
 export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
-export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.33/trimmomatic-0.33.jar
-export STRELKA_HOME=$APP_ROOT/strelka-1.0.14/
-export MUTECT_JAR=$APP_ROOT/mutect-src/mutect-1.1.7.jar
+export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.36/trimmomatic-0.36.jar
+export STRELKA_HOME=$APP_ROOT/strelka-1.0.15/
 export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
+export BCBIO_VARIATION_JAR=$APP_ROOT/bcbio.variation/bcbio.variation-0.2.6-standalone.jar
 export REF=/home/training/ebicancerworkshop201507/reference
 
 cd $HOME/ebicancerworkshop201507
@@ -55,7 +55,6 @@ cd $HOME/ebicancerworkshop201507
 ### Software requirements
 These are all already installed, but here are the original links.
 
-  * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
   * [BVATools](https://bitbucket.org/mugqic/bvatools/downloads)
   * [SAMTools](http://sourceforge.net/projects/samtools/)
   * [IGV](http://www.broadinstitute.org/software/igv/download)
@@ -63,8 +62,9 @@ These are all already installed, but here are the original links.
   * [Genome Analysis Toolkit](http://www.broadinstitute.org/gatk/)
   * [Picard](http://picard.sourceforge.net/)
   * [SnpEff](http://snpeff.sourceforge.net/)
-  * [MuTect](http://www.broadinstitute.org/cancer/cga/mutect)
+  * [Varscan2](http://varscan.sourceforge.net/)
   * [Strelka](https://sites.google.com/site/strelkasomaticvariantcaller/)
+  * [bcbio variation](https://github.com/chapmanb/bcbio.variation)
 
 # First data glance
 So you've just received an email saying that your data is ready for download from the sequencing center of your choice.
