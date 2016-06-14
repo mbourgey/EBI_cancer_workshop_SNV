@@ -248,10 +248,7 @@ done
 # varscan
 java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
 
-# Variants MuTecT
-# Note MuTecT only works with Java 6, 7 will give you an error
-# if you get "Comparison method violates its general contract!
-# you used java 7"
+# Variants MuTecT2
 java -Xmx2G -jar ${GATK_JAR} \
   -T MuTect2 \
   -R ${REF}/Homo_sapiens.GRCh37.fa \
@@ -281,13 +278,6 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
 
   cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
 
-java -Xmx2G -jar $BCBIO_VARIATION_JAR \
-  variant-ensemble \
-  tumor_pair_ensemble.yaml \
-  ${REF}/Homo_sapiens.GRCh37.fa \
-  pairedVariants/ensemble/ensemble.vcf \
-  pairedVariants/mutect.vcf pairedVariants/cktest/cktest.vardict.somatic.vcf.gz pairedVariants/cktest/cktest.samtools.somatic.vcf.gz
-
 for i in pairedVariants/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
 #z#less -S pairedVariants/varscan.snp.vcf.gz
 # SnpEff
@@ -295,11 +285,11 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
   -o vcf \
   -i vcf \
-  -stats pairedVariants/varscan.snpeff.vcf.stats.html \
+  -stats pairedVariants/mutect2.snpeff.vcf.stats.html \
   hg19 \
-  pairedVariants/paired_varscan.snp.vcf \
-  > pairedVariants/varscan.snpeff.vcf
-#less -S pairedVariants/mpileup.snpeff.vcf
+  pairedVariants/mutect2.vcf \
+  > pairedVariants/mutect2.snpeff.vcf
+#less -S pairedVariants/mutect2.snpeff.vcf
 # Coverage Track
 for i in normal tumor
 do

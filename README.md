@@ -715,10 +715,7 @@ java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVari
 ## Broad MuTecT
 
 ```{.bash}
-# Variants MuTecT
-# Note MuTecT only works with Java 6, 7 will give you an error
-# if you get "Comparison method violates its general contract!
-# you used java 7"
+# Variants MuTecT2
 java -Xmx2G -jar ${GATK_JAR} \
   -T MuTect2 \
   -R ${REF}/Homo_sapiens.GRCh37.fa \
@@ -756,18 +753,6 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
 ```
 
 
-## Intersecting the vcfs
-
-```{.bash}
-java -Xmx2G -jar $BCBIO_VARIATION_JAR \
-  variant-ensemble \
-  tumor_pair_ensemble.yaml \
-  ${REF}/Homo_sapiens.GRCh37.fa \
-  pairedVariants/ensemble/ensemble.vcf \
-  pairedVariants/mutect.vcf pairedVariants/cktest/cktest.vardict.somatic.vcf.gz pairedVariants/cktest/cktest.samtools.somatic.vcf.gz
-
-```
-
 Now we have variants from all three methods. Let's compress and index the vcfs for futur visualisation.
 
 ```{.bash}
@@ -803,16 +788,16 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
   -o vcf \
   -i vcf \
-  -stats pairedVariants/varscan.snpeff.vcf.stats.html \
+  -stats pairedVariants/mutect2.snpeff.vcf.stats.html \
   hg19 \
-  pairedVariants/paired_varscan.snp.vcf \
-  > pairedVariants/varscan.snpeff.vcf
+  pairedVariants/mutect2.vcf \
+  > pairedVariants/mutect2.snpeff.vcf
 ```
 
 Look at the new vcf file:
 
 ```{.bash}
-less -S pairedVariants/mpileup.snpeff.vcf
+less -S pairedVariants/mutect2.snpeff.vcf
 ```
 
 **Can you see the difference with the previous vcf ?** [solution](solutions/_snpeff1.md)
@@ -861,4 +846,4 @@ Explore/play with the data:
 
 
 ## Aknowledgments
-This tutorial is an adaptation of the one created by Louis letourneau [here](https://github.com/lletourn/Workshops/tree/ebiCancerWorkshop201407doc/01-SNVCalling.md). I would like to thank and acknowledge Louis for this help and for sharing his material. The format of the tutorial has been inspired from Mar Gonzalez Porta. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.
+I would like to thank and acknowledge Louis Letourneau for this help and for sharing his material. The format of the tutorial has been inspired from Mar Gonzalez Porta. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Robert Eveleigh, Edouard Henrion, Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.
