@@ -51,7 +51,7 @@ export BCBIO_VARIATION_JAR=$APP_ROOT/bcbio.variation/bcbio.variation-0.2.6-stand
 export REF=/home/training/ebicancerworkshop201607/reference
 
 
-cd $HOME/ebicancerworkshop201507/SNV
+cd $HOME/ebicancerworkshop201607/SNV
 ```
 
 ### Software requirements
