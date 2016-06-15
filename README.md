@@ -1,5 +1,5 @@
 
-# Introduction to DNA-Seq processing for cancer data
+# Introduction to DNA-Seq processing for cancer data - SNVs
 ***By Mathieu Bourgey, Ph.D***  
 *https://bitbucket.org/mugqic/mugqic_pipelines*
 
