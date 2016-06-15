@@ -20,6 +20,7 @@ This work is licensed under a [Creative Commons Attribution-ShareAlike 3.0 Unpor
 
 The initial structure of your folders should look like this:
 ```
+cd SNV_practical
 <ROOT>
 |-- raw_reads/               # fastqs from the center (down sampled)
     `-- normal               # The blood sample directory
@@ -49,7 +50,9 @@ export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
 export BCBIO_VARIATION_JAR=$APP_ROOT/bcbio.variation/bcbio.variation-0.2.6-standalone.jar
 export REF=/home/training/ebicancerworkshop201607/reference
 
-cd $HOME/ebicancerworkshop201507/SNV
+
+cd $HOME/ebicancerworkshop201607/SNV
+
 ```
 
 ### Software requirements
@@ -90,6 +93,7 @@ Now try these commands:
 ```{.bash}
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz | head -n4
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz | head -n4
+
 ```
 
 **What was special about the output ?**
@@ -100,6 +104,7 @@ You could also just count the reads
 
 ```{.bash}
 zgrep -c "^@HWUSI" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+
 ```
 
 We should obtain 4003 reads
@@ -108,6 +113,7 @@ We should obtain 4003 reads
 
 ```{.bash}
 zgrep -c "^@" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+
 ```
 
 [Solution](solutions/_fastq3.md)
@@ -127,6 +133,7 @@ java -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
   --read1 raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz \
   --read2 raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz \
   --threads 2 --regionName normalrun62DVGAAXX_1 --output originalQC/
+  
 ```
 
 Open the images
@@ -175,6 +182,7 @@ The adapter file is in your work folder.
 
 ```{.bash}
 cat adapters.fa
+
 ```
 
 **Why are there 2 different ones ?** [Solution](solutions/_trim1.md)
@@ -204,6 +212,7 @@ do
 done
 
 cat reads/normal/run62DVGAAXX_1/normal.trim.out
+
 ```
 
 [note on trimmomatic command](notes/_trimmomatic.md)
@@ -214,6 +223,8 @@ Exercice:
 **Let's generate the new graphs** [Solution](solutions/_fastqQC2.md)
 
 **How does it look now ?** [Solution](solutions/_trim3.md)
+
+__TO DO: check for trimming with sliding windows__
 
 
 # Alignment
@@ -227,7 +238,7 @@ The raw reads are now cleaned up of artefacts we can align each lane separatly.
 
 ```{.bash}
 # Align data
-for file in reads/*/run62*_4/*.pair1.fastq.gz;
+for file in reads/*/run*/*.pair1.fastq.gz;
 do
   FNAME=`basename $file`;
   DIR=`dirname $file`;
@@ -249,6 +260,7 @@ LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMI
     OUTPUT=${OUTPUT_DIR}/${SNAME}.sorted.bam \
     CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000
 done
+
 ```
  
 **Why did we pipe the output of one to the other ?** [Solution](solutions/_aln3.md)
@@ -328,6 +340,7 @@ Let's spend some time to explore bam files.
 
 ```{.bash}
 samtools view alignment/normal/normal.sorted.bam | head -n4
+
 ```
 
 Here you have examples of alignment results.
@@ -449,6 +462,7 @@ java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
   INPUT=alignment/tumor/tumor.sorted.realigned.bam \
   OUTPUT=alignment/tumor/tumor.matefixed.bam
+  
 ```
 
 ## Mark duplicates
@@ -463,22 +477,24 @@ Here we will use picards approach:
 ```{.bash}
 # Mark Duplicates
 java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
-  REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
+  REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
   INPUT=alignment/normal/normal.matefixed.bam \
   OUTPUT=alignment/normal/normal.sorted.dup.bam \
   METRICS_FILE=alignment/normal/normal.sorted.dup.metrics
 
 java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
-  REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
+  REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
   INPUT=alignment/tumor/tumor.matefixed.bam \
   OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
   METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
+  
 ```
 
 We can look in the metrics output to see what happened.
 
 ```{.bash}
 less alignment/normal/normal.sorted.dup.metrics
+
 ```
 
 **How many duplicates were there ?** [Solution](solutions/_markdup4.md)
@@ -508,7 +524,7 @@ do
     -T BaseRecalibrator \
     -nct 2 \
     -R ${REF}/Homo_sapiens.GRCh37.fa \
-    -knownSites ${REF}/dbSnp-137_chr9.vcf.gz \
+    -knownSites ${REF}/dbSnp-137_chr9.vcf \
     -L 9:130215000-130636000 \
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -I alignment/${i}/${i}.sorted.dup.bam
@@ -521,6 +537,7 @@ do
       -o alignment/${i}/${i}.sorted.dup.recal.bam \
       -I alignment/${i}/${i}.sorted.dup.bam
 done
+
 ```
 
 
@@ -559,6 +576,7 @@ do
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -L 9:130215000-130636000 
 done
+
 ```
 [note on DepthOfCoverage command](notes/_DOC.md)
 
@@ -569,6 +587,7 @@ Look at the coverage:
 ```{.bash}
 less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
 less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
+
 ```
 
 **Is the coverage fit with the expectation ?** [solution](solutions/_DOC1.md)
@@ -592,6 +611,7 @@ do
     HISTOGRAM_FILE=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.histo.pdf \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
+
 ```
 
 look at the output
@@ -599,6 +619,7 @@ look at the output
 ```{.bash}
 less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
 less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
+
 ```
 
 There is something interesting going on with our libraries.
@@ -623,6 +644,7 @@ do
     OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.alignment.tsv \
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
+
 ```
 
 explore the results
@@ -643,7 +665,7 @@ Most of SNV caller use either a Baysian, a threshold or a t-test approach to do 
 
  Here we will try 3 variant callers.
 - Varscan 2
-- MuTecT
+- MuTecT2
 - Strelka
 
 Other candidates
@@ -657,6 +679,7 @@ In our case, let's start with:
 
 ```{.bash}
 mkdir pairedVariants
+
 ```
 
 ## varscan 2
@@ -684,6 +707,7 @@ done
 
 # varscan
 java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+
 ```
 
 [note on samtools mpileup and bcftools command](notes/_mpileup.md)
@@ -691,23 +715,18 @@ java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVari
 ## Broad MuTecT
 
 ```{.bash}
-# Variants MuTecT
-# Note MuTecT only works with Java 6, 7 will give you an error
-# if you get "Comparison method violates its general contract!
-# you used java 7"
-java -Xmx2G -jar ${MUTECT_JAR} \
-  -T MuTect \
+# Variants MuTecT2
+java -Xmx2G -jar ${GATK_JAR} \
+  -T MuTect2 \
   -R ${REF}/Homo_sapiens.GRCh37.fa \
-  -dt NONE -baq OFF --validation_strictness LENIENT -nt 2 \
-  --dbsnp ${REF}/dbSnp-137_chr9.vcf.gz \
+  -dt NONE -baq OFF --validation_strictness LENIENT \
+  --dbsnp ${REF}/dbSnp-137_chr9.vcf \
   --cosmic ${REF}/b37_cosmic_v70_140903.vcf.gz \
   --input_file:normal alignment/normal/normal.sorted.dup.recal.bam \
   --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
-  --out pairedVariants/mutect.call_stats.txt \
-  --coverage_file pairedVariants/mutect.wig.txt \
-  -pow pairedVariants/mutect.power \
-  -vcf pairedVariants/mutect.vcf \
+  --out pairedVariants/mutect2.vcf \
   -L 9:130215000-130636000
+  
 ```
 
 ## Illumina Strelka
@@ -730,7 +749,9 @@ ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
   cd ../..
 
   cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
+
 ```
+
 
 Now we have variants from all three methods. Let's compress and index the vcfs for futur visualisation.
 
@@ -767,16 +788,16 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
   -o vcf \
   -i vcf \
-  -stats pairedVariants/varscan.snpeff.vcf.stats.html \
+  -stats pairedVariants/mutect2.snpeff.vcf.stats.html \
   hg19 \
-  pairedVariants/paired_varscan.snp.vcf \
-  > pairedVariants/varscan.snpeff.vcf
+  pairedVariants/mutect2.vcf \
+  > pairedVariants/mutect2.snpeff.vcf
 ```
 
 Look at the new vcf file:
 
 ```{.bash}
-less -S pairedVariants/mpileup.snpeff.vcf
+less -S pairedVariants/mutect2.snpeff.vcf
 ```
 
 **Can you see the difference with the previous vcf ?** [solution](solutions/_snpeff1.md)
@@ -825,4 +846,4 @@ Explore/play with the data:
 
 
 ## Aknowledgments
-This tutorial is an adaptation of the one created by Louis letourneau [here](https://github.com/lletourn/Workshops/tree/ebiCancerWorkshop201407doc/01-SNVCalling.md). I would like to thank and acknowledge Louis for this help and for sharing his material. The format of the tutorial has been inspired from Mar Gonzalez Porta. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.
+I would like to thank and acknowledge Louis Letourneau for this help and for sharing his material. The format of the tutorial has been inspired from Mar Gonzalez Porta. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Robert Eveleigh, Edouard Henrion, Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.
