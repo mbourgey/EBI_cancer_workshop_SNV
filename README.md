@@ -778,6 +778,9 @@ Some values are are almost always there:
 [note on the vcf format fields](notes/_vcf1.md)
 
 # Annotations
+First let's annotate variant calls based on their context (as opposed to functional annotation). 
+
+ 
 We typically use snpEff but many use annovar and VEP as well.
 
 Let's run snpEff:
@@ -789,7 +792,7 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   -o vcf \
   -i vcf \
   -stats pairedVariants/mutect2.snpeff.vcf.stats.html \
-  hg19 \
+  GRCh37.75 \
   pairedVariants/mutect2.vcf \
   > pairedVariants/mutect2.snpeff.vcf
 ```
