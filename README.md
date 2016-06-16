@@ -1,5 +1,5 @@
 
-# Introduction to DNA-Seq processing for cancer data
+# Introduction to DNA-Seq processing for cancer data - SNVs
 ***By Mathieu Bourgey, Ph.D***  
 *https://bitbucket.org/mugqic/mugqic_pipelines*
 
@@ -15,25 +15,6 @@ For more details about [CageKid](http://www.cng.fr/cagekid/)
 For practical reasons we subsampled the reads from the sample because running the whole dataset would take way too much time and resources.
 
 This work is licensed under a [Creative Commons Attribution-ShareAlike 3.0 Unported License](http://creativecommons.org/licenses/by-sa/3.0/deed.en_US). This means that you are able to copy, share and modify the work, as long as the result is distributed under the same license.
-
-## Original Setup
-
-The initial structure of your folders should look like this:
-```
-cd SNV_practical
-<ROOT>
-|-- raw_reads/               # fastqs from the center (down sampled)
-    `-- normal               # The blood sample directory
-        `-- run*_?           # Lane directory by run number. Contains the fastqs
-    `-- tumor                # The tumor sample directory
-        `-- run*_?           # Lane directory by run number. Contains the fastqs
-`-- commands.sh              # cheat sheet
-```
-
-
-### Cheat file
-* You can find all the unix command lines of this practical in the file: [commands.sh](scripts/commands.sh)
-
 
 
 ### Environment setup
@@ -68,6 +49,27 @@ These are all already installed, but here are the original links.
   * [Varscan2](http://varscan.sourceforge.net/)
   * [Strelka](https://sites.google.com/site/strelkasomaticvariantcaller/)
   * [bcbio variation](https://github.com/chapmanb/bcbio.variation)
+
+
+## Original Setup
+
+The initial structure of your folders should look like this:
+```
+cd SNV_practical
+<ROOT>
+|-- raw_reads/               # fastqs from the center (down sampled)
+    `-- normal               # The blood sample directory
+        `-- run*_?           # Lane directory by run number. Contains the fastqs
+    `-- tumor                # The tumor sample directory
+        `-- run*_?           # Lane directory by run number. Contains the fastqs
+`-- commands.sh              # cheat sheet
+```
+
+
+### Cheat file
+* You can find all the unix command lines of this practical in the file: [commands.sh](scripts/commands.sh)
+
+
 
 # First data glance
 So you've just received an email saying that your data is ready for download from the sequencing center of your choice.
