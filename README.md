@@ -3,6 +3,12 @@
 ***By Mathieu Bourgey, Ph.D***  
 *https://bitbucket.org/mugqic/mugqic_pipelines*
 
+================================
+
+This work is licensed under a [Creative Commons Attribution-ShareAlike 3.0 Unported License](http://creativecommons.org/licenses/by-sa/3.0/deed.en_US). This means that you are able to copy, share and modify the work, as long as the result is distributed under the same license.
+
+================================
+
 In this workshop, we will present the main steps that are commonly used to process and to analyze cancer sequencing data. We will focus only on whole genome data and provide command lines that allow detecting Single Nucleotide Variants (SNV). This workshop will show you how to launch individual steps of a complete DNA-Seq SNV pipeline using cancer data
 
 
@@ -14,7 +20,6 @@ For more details about [CageKid](http://www.cng.fr/cagekid/)
 
 For practical reasons we subsampled the reads from the sample because running the whole dataset would take way too much time and resources.
 
-This work is licensed under a [Creative Commons Attribution-ShareAlike 3.0 Unported License](http://creativecommons.org/licenses/by-sa/3.0/deed.en_US). This means that you are able to copy, share and modify the work, as long as the result is distributed under the same license.
 
 
 ### Environment setup
