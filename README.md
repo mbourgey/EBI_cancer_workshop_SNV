@@ -812,7 +812,6 @@ less -S pairedVariants/mutect2.snpeff.vcf
 Exercice: 
 **Find a somatic mutation with a predicted High or Moderate impact** [solution](solutions/_snpeff2.md)
 
-For now we will not explore this step since you will be working with gene annotations in your next workshop.
 
 You could also take a look at the HTML stats file snpEff created: it contains some metrics on the variants it analyzed.
 
