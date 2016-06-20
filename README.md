@@ -60,14 +60,15 @@ These are all already installed, but here are the original links.
 
 The initial structure of your folders should look like this:
 ```
-cd SNV_practical
 <ROOT>
 |-- raw_reads/               # fastqs from the center (down sampled)
     `-- normal               # The blood sample directory
         `-- run*_?           # Lane directory by run number. Contains the fastqs
     `-- tumor                # The tumor sample directory
         `-- run*_?           # Lane directory by run number. Contains the fastqs
-`-- commands.sh              # cheat sheet
+|-- savedResults             # Folder containing precomputed results
+|-- scripts                  # cheat sheet folder
+|-- adapters.fa              # fasta file containing the adapter used for sequencing
 ```
 
 
