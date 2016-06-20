@@ -27,7 +27,7 @@ Looks good but located in intron, so possibly no impact:
 
 Called as somatic indels with high/moderate impact by mutect2 but looks False Positive calls 
 
- - 9 130635680 - 
+ - 9 130635680
  - 9 130635681
 
 Called as somatic snp with high/moderate impact and looks rea
