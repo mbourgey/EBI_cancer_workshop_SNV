@@ -30,8 +30,9 @@ Called as somatic indels with high/moderate impact by mutect2 but looks False Po
  - 9 130635680
  - 9 130635681
 
-Called as somatic snp with high/moderate impact and looks rea
+Called as somatic snp with high/moderate impact and looks real
 
  - 9 130634110
 
- 
+
+We can see here, it is usually a good sign when several callers detect the mutation

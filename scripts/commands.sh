@@ -286,7 +286,7 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   -o vcf \
   -i vcf \
   -stats pairedVariants/mutect2.snpeff.vcf.stats.html \
-  hg19 \
+  GRCh37.75 \
   pairedVariants/mutect2.vcf \
   > pairedVariants/mutect2.snpeff.vcf
 less -S pairedVariants/mutect2.snpeff.vcf
