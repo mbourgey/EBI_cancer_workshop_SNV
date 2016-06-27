@@ -718,7 +718,7 @@ java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVari
 
 ```
 
-[note on samtools mpileup and bcftools command](notes/_mpileup1.md)
+[note on samtools mpileup command](notes/_mpileup1.md)
 
 ## Broad MuTecT
 
