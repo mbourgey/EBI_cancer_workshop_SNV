@@ -41,10 +41,10 @@ export CONPAIR_SCRIPTS=$CONPAIR_DIR/scripts
 export PYTHONPATH=$APP_EXT/Conpair/modules:$PYTHONPATH
 
 
-export REF=/home/training/ebicancerworkshop201607/reference
+export REF=/home/training/ebicancerworkshop2017/reference
 
 
-cd $HOME/ebicancerworkshop201607/SNV
+cd $HOME/ebicancerworkshop2017/SNV
 
 ```
 
