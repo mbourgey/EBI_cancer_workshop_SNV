@@ -24,16 +24,23 @@ For practical reasons we subsampled the reads from the sample because running th
 
 ### Environment setup
 ```{.bash}
-export APP_ROOT=/home/training/Applications/
-export PATH=$PATH:$APP_ROOT/IGVTools
-export PICARD_JAR=$APP_ROOT/picard-tools/picard.jar
-export SNPEFF_HOME=$APP_ROOT/snpEff/
-export GATK_JAR=$APP_ROOT/gatk/GenomeAnalysisTK.jar
-export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
-export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.36/trimmomatic-0.36.jar
-export STRELKA_HOME=$APP_ROOT/strelka-1.0.15/
-export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
-export BCBIO_VARIATION_JAR=$APP_ROOT/bcbio.variation/bcbio.variation-0.2.6-standalone.jar
+export APP_ROOT=/usr/local/bin
+export APP_EXT=/home/training/tools
+export PICARD_JAR=$APP_ROOT/picard.jar
+export SNPEFF_JAR=$APP_ROOT/snpEff.jar
+export GATK_JAR=$APP_ROOT/GenomeAnalysisTK.jar
+export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6-full.jar
+export TRIMMOMATIC_JAR=$APP_ROOT/trimmomatic-0.36.jar
+export VARSCAN_JAR=$APP_EXT/varscan2/VarScan.v2.3.9.jar
+
+#conpair setup
+export CONPAIR_DIR=$APP_EXT/Conpair/
+export PATH=$CONPAIR_DIR/scripts:$PATH
+export CONPAIR_DATA=$CONPAIR_DIR/data
+export CONPAIR_SCRIPTS=$CONPAIR_DIR/scripts
+export PYTHONPATH=$APP_EXT/Conpair/modules:$PYTHONPATH
+
+
 export REF=/home/training/ebicancerworkshop201607/reference
 
 
