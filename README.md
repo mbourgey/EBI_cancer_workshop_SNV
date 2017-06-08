@@ -35,10 +35,12 @@ export VARSCAN_JAR=$APP_EXT/varscan2/VarScan.v2.3.9.jar
 
 #conpair setup
 export CONPAIR_DIR=$APP_EXT/Conpair/
-export PATH=$CONPAIR_DIR/scripts:$PATH
 export CONPAIR_DATA=$CONPAIR_DIR/data
 export CONPAIR_SCRIPTS=$CONPAIR_DIR/scripts
 export PYTHONPATH=$APP_EXT/Conpair/modules:$PYTHONPATH
+
+#set-up PATH
+export PATH=$CONPAIR_DIR/scripts:$APP_EXT/bwa-0.7.15:$PATH
 
 
 export REF=/home/training/ebicancerworkshop2017/reference
