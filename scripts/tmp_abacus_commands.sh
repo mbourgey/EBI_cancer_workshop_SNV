@@ -280,7 +280,7 @@ vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --remove-filt
 
 
 ##vardict
-java -XX:ParallelGCThreads=1 -Xmx4G -classpath $VARDICT_HOME/lib/VarDict-1.4.10.jar:$VARDICT_HOME/lib/commons-cli-1.2.jar:$VARDICT_HOME/lib/jregex-1.2_01.jar:$VARDICT_HOME/lib/htsjdk-2.8.0.jar com.astrazeneca.vardict.Main   -G ${REF}/Homo_sapiens.GRCh37.fa   -N tumor_pair   -b "alignment/tumor/tumor.sorted.dup.recal.bam|alignment/normal/normal.sorted.dup.recal.bam"  -C -f 0.02 -Q 10 -c 1 -S 2 -E 3 -g 4 -th 3 vardict.bed | $VARDICT_BIN/testsomatic.R   | perl $VARDICT_BIN/var2vcf_paired.pl     -N "TUMOR|NORMAL"     -f 0.02 -P 0.9 -m 4.25 -M  > pairedVariants/vardict.vcf
+java -XX:ParallelGCThreads=1 -Xmx4G -classpath $VARDICT_HOME/lib/VarDict-1.5.1.jar:$VARDICT_HOME/lib/commons-cli-1.2.jar:$VARDICT_HOME/lib/jregex-1.2_01.jar:$VARDICT_HOME/lib/htsjdk-2.8.0.jar com.astrazeneca.vardict.Main   -G ${REF}/Homo_sapiens.GRCh37.fa   -N tumor_pair   -b "alignment/tumor/tumor.sorted.dup.recal.bam|alignment/normal/normal.sorted.dup.recal.bam"  -C -f 0.02 -Q 10 -c 1 -S 2 -E 3 -g 4 -th 3 vardict.bed | $VARDICT_BIN/testsomatic.R   | perl $VARDICT_BIN/var2vcf_paired.pl     -N "TUMOR|NORMAL"     -f 0.02 -P 0.9 -m 4.25 -M  > pairedVariants/vardict.vcf
 
 bcftools view -f PASS  -i 'INFO/STATUS ~ ".*Somatic"' pairedVariants/vardict.vcf | awk ' BEGIN {OFS="\t"} { if(substr($0,0,1) == "#" || length($4) == length($5)) {if(substr($0,0,2) != "##") {t=$10; $10=$11; $11=t} ; print}} ' > pairedVariants/vardict.snp.somatic.vcf
 
