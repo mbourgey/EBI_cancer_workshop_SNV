@@ -27,7 +27,7 @@ For practical reasons we subsampled the reads from the sample because running th
 export APP_ROOT=/usr/local/bin
 export APP_EXT=/home/training/tools
 export PICARD_JAR=$APP_ROOT/picard.jar
-export SNPEFF_JAR=$APP_ROOT/snpEff.jar
+export SNPEFF_HOME=$APP_EXT/snpEff
 export GATK_JAR=$APP_ROOT/GenomeAnalysisTK.jar
 export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6-full.jar
 export TRIMMOMATIC_JAR=$APP_ROOT/trimmomatic-0.36.jar
