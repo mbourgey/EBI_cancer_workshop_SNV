@@ -304,7 +304,4 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   pairedVariants/ensemble.snp.somatic.vcf.gz \
   > pairedVariants/ensemble.snp.somatic.snpeff.vcf
 
-#cosmic annotation
-java -Xmx2g -jar $GATK_JAR -T VariantAnnotator -R $REF/hg19.fa \
---dbsnp $REF/dbSNP_135_chr1.vcf.gz --variant variants/NA12878.rmdup.realign.hc.filter.snpeff.vcf \
--o variants/NA12878.rmdup.realign.hc.filter.snpeff.dbsnp.vcf -L chr1:17704860-18004860
+
