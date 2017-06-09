@@ -39,8 +39,13 @@ export CONPAIR_DATA=$CONPAIR_DIR/data
 export CONPAIR_SCRIPTS=$CONPAIR_DIR/scripts
 export PYTHONPATH=$APP_EXT/Conpair/modules:$PYTHONPATH
 
+#VarDict setup
+export VARDICT_HOME=$APP_EXT/VarDictJava-1.5.1
+export VARDICT_BIN=$VARDICT_HOME/VarDict
+export VARDICT_JAR=$VARDICT_HOME/lib/VarDictJava-1.5.1.jar
+
 #set-up PATH
-export PATH=$CONPAIR_DIR/scripts:$APP_EXT/bwa-0.7.15:$PATH
+export PATH=$CONPAIR_DIR/scripts:$APP_EXT/bwa-0.7.15:$VARDICT_HOME/bin:$PATH
 
 
 export REF=/home/training/ebicancerworkshop2017/reference
