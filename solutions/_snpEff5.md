@@ -1,0 +1,1 @@
+The variant is a substitution at the end of exon 5 of the AK1 gene. The variant is heteroygous and does not seems to involve supicous reads, no strand bias and no positional read effect.

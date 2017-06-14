@@ -66,7 +66,8 @@ These are all already installed, but here are the original links.
   * [Picard](http://picard.sourceforge.net/)
   * [SnpEff](http://snpeff.sourceforge.net/)
   * [Varscan2](http://varscan.sourceforge.net/)
-  * [Strelka](https://sites.google.com/site/strelkasomaticvariantcaller/)
+  * [Vardict](https://github.com/AstraZeneca-NGS/VarDict)
+  * [conpair](https://github.com/nygenome/Conpair)
   * [bcbio variation](https://github.com/chapmanb/bcbio.variation)
 
 
@@ -467,7 +468,7 @@ ATCG--ATATATATATCG
 
 **Why it is important ?**[Solution](solutions/_realign4.md)
 
-## FixMates
+## FixMates (optional)
 Why ?
   
    - Some read entries don't have their mate information written properly.
@@ -476,14 +477,14 @@ We use Picard to do this:
 
 ```{.bash}
 # Fix Mate
-java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
-  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
-  INPUT=alignment/normal/normal.sorted.realigned.bam \
-  OUTPUT=alignment/normal/normal.matefixed.bam
-java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
-  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
-  INPUT=alignment/tumor/tumor.sorted.realigned.bam \
-  OUTPUT=alignment/tumor/tumor.matefixed.bam
+#java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
+#  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
+#  INPUT=alignment/normal/normal.sorted.realigned.bam \
+#  OUTPUT=alignment/normal/normal.matefixed.bam
+#java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
+#  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
+#  INPUT=alignment/tumor/tumor.sorted.realigned.bam \
+#  OUTPUT=alignment/tumor/tumor.matefixed.bam
   
 ```
 
@@ -500,13 +501,13 @@ Here we will use picards approach:
 # Mark Duplicates
 java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
-  INPUT=alignment/normal/normal.matefixed.bam \
+  INPUT=alignment/normal/normal.sorted.realigned.bam \
   OUTPUT=alignment/normal/normal.sorted.dup.bam \
   METRICS_FILE=alignment/normal/normal.sorted.dup.metrics
 
 java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
-  INPUT=alignment/tumor/tumor.matefixed.bam \
+  INPUT=alignment/tumor/tumor.sorted.realigned.bam \
   OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
   METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
   
@@ -567,6 +568,9 @@ done
 # Extract BAM metrics
 Once your whole bam is generated, it's always a good thing to check the data again to see if everything makes sens.
 
+**Contamination and tumor/normal concordance**
+It tells you if your date are contaminated or if a mix-up had occured
+
 **Compute coverage**
 If you have data from a capture kit, you should see how well your targets worked
 
@@ -575,6 +579,58 @@ It tells you if your library worked
 
 **Alignment metrics**
 It tells you if your sample and you reference fit together
+
+## Estimate Normal/tumor concordance and contamination
+To estimate these metrics we will use the Conpair tool. This run in 3 steps:
+ 1 - Generate GATK pileup
+ 2 - Estimate the normal-tumor concrodance
+ 3 - Estimate contamination
+
+
+```{.bash}
+#pileup for the tumor sample
+run_gatk_pileup_for_sample.py \
+  -m 6G \
+  -G $GATK_JAR \
+  -D $CONPAIR_DIR \
+  -R ${REF}/Homo_sapiens.GRCh37.fa \
+  -B alignment/tumor/tumor.sorted.dup.recal.bam \
+  -O alignment/tumor/tumor.sorted.dup.recal.gatkPileup
+
+#pileup for the normal sample
+run_gatk_pileup_for_sample.py \
+  -m 2G \
+  -G $GATK_JAR \
+  -D $CONPAIR_DIR \
+  -R ${REF}/Homo_sapiens.GRCh37.fa \
+  -B alignment/normal/normal.sorted.dup.recal.bam \
+  -O alignment/normal/normal.sorted.dup.recal.gatkPileup
+
+#Check concordance
+verify_concordance.py -H \
+  -M  ${CONPAIR_DATA}/markers/GRCh37.autosomes.phase3_shapeit2_mvncall_integrated.20130502.SNV.genotype.sselect_v4_MAF_0.4_LD_0.8.txt \
+  -N alignment/normal/normal.sorted.dup.recal.gatkPileup \
+  -T alignment/tumor/tumor.sorted.dup.recal.gatkPileup \
+  > TumorPair.concordance.tsv 
+
+#Esitmate contamination
+estimate_tumor_normal_contamination.py  \
+  -M ${CONPAIR_DATA}/markers/GRCh37.autosomes.phase3_shapeit2_mvncall_integrated.20130502.SNV.genotype.sselect_v4_MAF_0.4_LD_0.8.txt \
+  -N alignment/normal/normal.sorted.dup.recal.gatkPileup \
+  -T alignment/tumor/tumor.sorted.dup.recal.gatkPileup \
+   > TumorPair.contamination.tsv
+
+```
+
+Look at the concordance and contamination metrics file
+
+```{.bash}
+less TumorPair.concordance.tsv
+less TumorPair.contamination.tsv
+
+```
+
+**What do you think about these estimations ?** [solution](solutions/_Conpair.md)
 
 ## Compute coverage
 Both GATK and BVATools have depth of coverage tools. 
@@ -688,11 +744,8 @@ Most of SNV caller use either a Baysian, a threshold or a t-test approach to do 
  Here we will try 3 variant callers.
 - Varscan 2
 - MuTecT2
-- Strelka
+- Vardict
 
-Other candidates
-- Virmid
-- Somatic sniper
 
 many, MANY others can be found here:
 https://www.biostars.org/p/19104/
@@ -709,7 +762,7 @@ mkdir pairedVariants
 VarScan calls somatic variants (SNPs and indels) using a heuristic method and a statistical test based on the number of aligned reads supporting each allele.
 
 
-Varscan somatic caller expects both a normal and a tumor file in SAMtools pileup format. from sequence alignments in binary alignment/map (BAM) format. To build a pileup file, you will need:
+Varscan somatic caller expects both a normal and a tumor file in SAMtools pileup format. From sequence alignments in binary alignment/map (BAM) format. To build a pileup file, you will need:
 
 - A SAM/BAM file ("myData.bam") that has been sorted using the sort command of SAMtools.
 - The reference sequence ("reference.fasta") to which reads were aligned, in FASTA format.
@@ -726,13 +779,26 @@ samtools mpileup -L 1000 -B -q 1 \
   alignment/${i}/${i}.sorted.dup.recal.bam \
   > pairedVariants/${i}.mpileup
 done
+```
+[note on samtools mpileup command](notes/_mpileup1.md)
 
+
+Now we can run varscan:
+
+```{.bash}
 # varscan
 java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
 
 ```
 
-[note on samtools mpileup command](notes/_mpileup1.md)
+Then we can extract somatic SNPs:
+
+```{.bash}
+# Filtering
+grep "^#\|SS=2" pairedVariants/varscan2.snp.vcf > pairedVariants/varscan2.snp.somatic.vcf
+
+```
+
 
 ## Broad MuTecT
 
@@ -751,41 +817,43 @@ java -Xmx2G -jar ${GATK_JAR} \
   
 ```
 
-## Illumina Strelka
+Then we can extract somatic SNPs:
 
 ```{.bash}
-# Variants Strelka
-cp ${STRELKA_HOME}/etc/strelka_config_bwa_default.ini ./
-# Fix ini since we subsampled
-sed 's/isSkipDepthFilters =.*/isSkipDepthFilters = 1/g' -i strelka_config_bwa_default.ini
-
-${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
-  --normal=alignment/normal/normal.sorted.dup.recal.bam \
-  --tumor=alignment/tumor/tumor.sorted.dup.recal.bam \
-  --ref=${REF}/Homo_sapiens.GRCh37.fa \
-  --config=$(pwd)/strelka_config_bwa_default.ini \
-  --output-dir=pairedVariants/strelka/
-
-  cd pairedVariants/strelka/
-  make -j3
-  cd ../..
-
-  cp pairedVariants/strelka/results/passed.somatic.snvs.vcf pairedVariants/strelka.vcf
-
+# Filtering
+vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --remove-filtered-all --recode --indv NORMAL --indv TUMOR | awk ' BEGIN {OFS="\t"} {if(substr($0,0,2) != "##") {t=$10; $10=$11; $11=t } ;print } ' >  pairedVariants/mutect2.snp.somatic.vcf
+  
 ```
 
 
-Now we have variants from all three methods. Let's compress and index the vcfs for futur visualisation.
+## Vardict
 
 ```{.bash}
-for i in pairedVariants/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
+# Variants Vardict
+java -XX:ParallelGCThreads=1 -Xmx4G -classpath $VARDICT_HOME/lib/VarDict-1.5.1.jar:$VARDICT_HOME/lib/commons-cli-1.2.jar:$VARDICT_HOME/lib/jregex-1.2_01.jar:$VARDICT_HOME/lib/htsjdk-2.8.0.jar com.astrazeneca.vardict.Main   -G ${REF}/Homo_sapiens.GRCh37.fa   -N tumor_pair   -b "alignment/tumor/tumor.sorted.dup.recal.bam|alignment/normal/normal.sorted.dup.recal.bam"  -C -f 0.02 -Q 10 -c 1 -S 2 -E 3 -g 4 -th 3 vardict.bed | $VARDICT_BIN/testsomatic.R   | perl $VARDICT_BIN/var2vcf_paired.pl     -N "TUMOR|NORMAL"     -f 0.02 -P 0.9 -m 4.25 -M  > pairedVariants/vardict.vcf
+
 ```
 
-Let's look at a compressed vcf.
+Then we can extract somatic SNPs:
 
 ```{.bash}
-zless -S pairedVariants/varscan.snp.vcf.gz
+# Filtering
+bcftools view -f PASS  -i 'INFO/STATUS ~ ".*Somatic"' pairedVariants/vardict.vcf | awk ' BEGIN {OFS="\t"} { if(substr($0,0,1) == "#" || length($4) == length($5)) {if(substr($0,0,2) != "##") {t=$10; $10=$11; $11=t} ; print}} ' > pairedVariants/vardict.snp.somatic.vcf
+
 ```
+
+Now we have somatic variants from all three methods. Let's look at the results. 
+
+```{.bash}
+less pairedVariants/varscan2.snp.somatic.vcf
+less pairedVariants/mutect2.snp.somatic.vcf
+less pairedVariants/vardict.snp.somatic.vcf
+
+```
+
+**could you notice something from these vcf files ?** [Solution](solutions/_vcf1.md)
+
+
 Details on the spec can be found here:
 http://vcftools.sourceforge.net/specs.html
 
@@ -799,9 +867,36 @@ Some values are are almost always there:
 
 [note on the vcf format fields](notes/_vcf1.md)
 
-# Annotations
-We typically use snpEff but many use annovar and VEP as well.
+Choosing the best caller is not an easy task each of them have their pros and cons. Now new methods have been developped to extract the best information from a multiple set of variant caller. These methods refer to the ensemble approach (as developped in bcbio.variation or somaticSeq) and rely on pre-selecting a subset of variants from the interesect of multiple caller and then apply Machine Learning approach to filter the high quality variants.
 
+As we don't have enbough variant for the full ensemble approach we will just launch the initial step in order to generate a unifed callset form all the call found in at least 2 different caller:
+
+```{.bash}
+# Unified callset
+bcbio-variation-recall ensemble \
+  --cores 2 --numpass 2 --names mutect2,varscan2,vardict \
+  pairedVariants/ensemble.snp.somatic.vcf.gz \
+  ${REF}/Homo_sapiens.GRCh37.fa \
+  pairedVariants/mutect2.snp.somatic.vcf    \
+  pairedVariants/varscan2.snp.somatic.vcf    \
+  pairedVariants/vardict.snp.somatic.vcf
+
+```
+
+look at the unified callset
+
+```{.bash}
+zless pairedVariants/ensemble.snp.somatic.vcf.gz
+
+```
+
+
+# Annotations
+The next step in trying to make sense of the variant calls is to assign functional consequence to each variant.
+
+At the most basic level, this involves using gene annotations to determine if variants are sense, missense, or nonsense. 
+
+We typically use SnpEff but many use Annovar and VEP as well.
 Let's run snpEff:
 
 ```{.bash}
@@ -810,25 +905,50 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
   -o vcf \
   -i vcf \
-  -stats pairedVariants/mutect2.snpeff.vcf.stats.html \
+  -stats pairedVariants/ensemble.snp.somatic.snpeff.stats.html \
   GRCh37.75 \
-  pairedVariants/mutect2.vcf \
-  > pairedVariants/mutect2.snpeff.vcf
+  pairedVariants/ensemble.snp.somatic.vcf.gz \
+  > pairedVariants/ensemble.snp.somatic.snpeff.vcf
 ```
 
-Look at the new vcf file:
+You can learn more about the meaning of snpEff annotations [here](http://snpeff.sourceforge.net/SnpEff_manual.html#output).
 
-```{.bash}
-less -S pairedVariants/mutect2.snpeff.vcf
+Use less to look at the new vcf file: 
+
+```
+less -S pairedVariants/ensemble.snp.somatic.snpeff.vcf
 ```
 
 **Can you see the difference with the previous vcf ?** [solution](solutions/_snpeff1.md)
+
+
+The annotation is presented in the INFO field using the new ANN format. For more information on this field see [here](http://snpeff.sourceforge.net/VCFannotationformat_v1.0.pdf). Typically, we have: 
+
+
+`ANN=Allele|Annotation|Putative impact|Gene name|Gene ID|Feature type|Feature ID|Transcript biotype|Rank Total|HGVS.c|...`
+
+Here's an example of a typical annotation: 
+
+`ANN=T|intron_variant|MODIFIER|FAM129B|ENSG00000136830|transcript|ENST00000373312|protein_coding|1/13|c.56-2842T>A|||`
+
+**What does the example annotation actually mean?** [solution](solutions/_snpEff3.md)
+
 
 Exercice: 
 **Find a somatic mutation with a predicted High or Moderate impact** [solution](solutions/_snpeff2.md)
 
 
-You could also take a look at the HTML stats file snpEff created: it contains some metrics on the variants it analyzed.
+**What effect categories were represented in these variants?** [solution](solutions/_snpEff4.md)
+
+
+
+
+Next, you should view the report generated by snpEff.
+
+Use the procedure described previously to retrieve:
+
+`snpEff_summary.html`
+
 
 
 ## Data visualisation
@@ -864,7 +984,7 @@ Explore/play with the data:
 
 [solution](solutions/_igv1.md)
 
-
+**Open the high impact position in IGV, what do you see?** [solution](solutions/_snpEff5.md)
 
 ## Aknowledgments
 I would like to thank and acknowledge Louis Letourneau for this help and for sharing his material. The format of the tutorial has been inspired from Mar Gonzalez Porta. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Robert Eveleigh, Edouard Henrion, Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.

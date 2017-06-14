@@ -1,0 +1,1 @@
+This variant (T>A) is located in an intron of the FAM129B gene and is probably not affecting the fonction of the gene. 
