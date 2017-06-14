@@ -788,7 +788,7 @@ Now we can run varscan:
 
 ```{.bash}
 # varscan
-java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan2 --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
 
 ```
 

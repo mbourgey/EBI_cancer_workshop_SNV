@@ -295,7 +295,7 @@ samtools mpileup -L 1000 -B -q 1 \
   > pairedVariants/${i}.mpileup
 done
 # varscan
-java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan2 --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
 
 # Filtering
 grep "^#\|SS=2" pairedVariants/varscan2.snp.vcf > pairedVariants/varscan2.snp.somatic.vcf
