@@ -1,8 +1,33 @@
-m mugqic/igvtools/2.3.67 mugqic/java/openjdk-jdk1.8.0_72 mugqic/picard/2.9.0 mugqic/snpEff/4.3 mugqic/GenomeAnalysisTK/3.7 mugqic/bwa/0.7.12 mugqic/bvatools/1.6 mugqic/trimmomatic/0.36 mugqic/vt/0.57 mugqic/gemini/0.19.1 mugqic/R_Bioconductor/3.3.3_3.4 mugqic/VarScan/2.4.2 mugqic/VarDictJava/1.4.10 mugqic/vcftools/0.1.14 mugqic/htslib/1.3 mugqic/bcbio.variation/0.2.6 mugqic/bcbio.variation.recall/0.1.7
+export APP_ROOT=/usr/local/bin
+export APP_EXT=/home/training/tools
+export PICARD_JAR=$APP_ROOT/picard.jar
+export SNPEFF_HOME=$APP_EXT/snpEff
+export GATK_JAR=$APP_ROOT/GenomeAnalysisTK.jar
+export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6-full.jar
+export TRIMMOMATIC_JAR=$APP_ROOT/trimmomatic-0.36.jar
+export VARSCAN_JAR=$APP_EXT/varscan2/VarScan.v2.3.9.jar
 
-export REF=/lb/project/mugqic/projects/workshop_EBI_2017/data/reference/
+#conpair setup
+export CONPAIR_DIR=$APP_EXT/Conpair/
+export CONPAIR_DATA=$CONPAIR_DIR/data
+export CONPAIR_SCRIPTS=$CONPAIR_DIR/scripts
+export PYTHONPATH=$APP_EXT/Conpair/modules:$PYTHONPATH
 
-zless -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
+#VarDict setup
+export VARDICT_HOME=$APP_EXT/VarDictJava-1.5.1
+export VARDICT_BIN=$VARDICT_HOME/VarDict
+
+
+#set-up PATH
+export PATH=$CONPAIR_DIR/scripts:$APP_EXT/bwa-0.7.15:$VARDICT_HOME/bin:$PATH
+
+
+export REF=/home/training/ebicancerworkshop2017/reference
+
+
+cd $HOME/ebicancerworkshop2017/SNV
+
+#zless -S raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz | head -n4
 zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz | head -n4
@@ -127,6 +152,17 @@ java -Xmx2G -jar ${GATK_JAR} \
   mv normal.sorted.realigned.ba* alignment/normal/
   mv tumor.sorted.realigned.ba* alignment/tumor/
 
+
+# Fix Mate
+#java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
+#  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
+#  INPUT=alignment/normal/normal.sorted.realigned.bam \
+#  OUTPUT=alignment/normal/normal.matefixed.bam
+#java -Xmx2G -jar ${PICARD_JAR}  FixMateInformation \
+#  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
+#  INPUT=alignment/tumor/tumor.sorted.realigned.bam \
+#  OUTPUT=alignment/tumor/tumor.matefixed.bam
+  
 # Mark Duplicates
 java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
@@ -139,8 +175,8 @@ java -Xmx2G -jar ${PICARD_JAR}  MarkDuplicates \
   INPUT=alignment/tumor/tumor.sorted.realigned.bam \
   OUTPUT=alignment/tumor/tumor.sorted.dup.bam \
   METRICS_FILE=alignment/tumor/tumor.sorted.dup.metrics
-
-less alignment/normal/normal.sorted.dup.metrics
+  
+#less alignment/normal/normal.sorted.dup.metrics
 
 # Recalibrate
 for i in normal tumor
@@ -163,8 +199,7 @@ do
       -I alignment/${i}/${i}.sorted.dup.bam
 done
 
-#####################
-#estimate Normal_tumor concordance and contamination
+#pileup for the tumor sample
 run_gatk_pileup_for_sample.py \
   -m 6G \
   -G $GATK_JAR \
@@ -173,6 +208,7 @@ run_gatk_pileup_for_sample.py \
   -B alignment/tumor/tumor.sorted.dup.recal.bam \
   -O alignment/tumor/tumor.sorted.dup.recal.gatkPileup
 
+#pileup for the normal sample
 run_gatk_pileup_for_sample.py \
   -m 2G \
   -G $GATK_JAR \
@@ -181,17 +217,22 @@ run_gatk_pileup_for_sample.py \
   -B alignment/normal/normal.sorted.dup.recal.bam \
   -O alignment/normal/normal.sorted.dup.recal.gatkPileup
 
+#Check concordance
 verify_concordance.py -H \
   -M  ${CONPAIR_DATA}/markers/GRCh37.autosomes.phase3_shapeit2_mvncall_integrated.20130502.SNV.genotype.sselect_v4_MAF_0.4_LD_0.8.txt \
   -N alignment/normal/normal.sorted.dup.recal.gatkPileup \
-  -T alignment/tumor/tumor.sorted.dup.recal.gatkPileup > TumorPair.concordance.tsv 
+  -T alignment/tumor/tumor.sorted.dup.recal.gatkPileup \
+  > TumorPair.concordance.tsv 
 
+#Esitmate contamination
 estimate_tumor_normal_contamination.py  \
   -M ${CONPAIR_DATA}/markers/GRCh37.autosomes.phase3_shapeit2_mvncall_integrated.20130502.SNV.genotype.sselect_v4_MAF_0.4_LD_0.8.txt \
   -N alignment/normal/normal.sorted.dup.recal.gatkPileup \
   -T alignment/tumor/tumor.sorted.dup.recal.gatkPileup \
    > TumorPair.contamination.tsv
-   
+
+#less TumorPair.concordance.tsv
+#less TumorPair.contamination.tsv
 
 # Get Depth
 for i in normal tumor
@@ -210,8 +251,8 @@ do
     -L 9:130215000-130636000 
 done
 
-less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
-less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
+#less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
+#less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
 
 # Get insert size
 for i in normal tumor
@@ -225,9 +266,8 @@ do
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
 
-less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
-less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
-
+#less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
+#less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
 
 # Get alignment metrics
 for i in normal tumor
@@ -240,8 +280,8 @@ do
     METRIC_ACCUMULATION_LEVEL=LIBRARY
 done
 
-less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
-less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
+#less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
+#less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
 
 mkdir pairedVariants
 
@@ -254,14 +294,11 @@ samtools mpileup -L 1000 -B -q 1 \
   alignment/${i}/${i}.sorted.dup.recal.bam \
   > pairedVariants/${i}.mpileup
 done
-
-
-
 # varscan
-java -Xmx2G -jar ${VARSCAN2_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan2 --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+java -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
 
+# Filtering
 grep "^#\|SS=2" pairedVariants/varscan2.snp.vcf > pairedVariants/varscan2.snp.somatic.vcf
-
 
 # Variants MuTecT2
 java -Xmx2G -jar ${GATK_JAR} \
@@ -274,18 +311,21 @@ java -Xmx2G -jar ${GATK_JAR} \
   --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
   --out pairedVariants/mutect2.vcf \
   -L 9:130215000-130636000
-
+  
+# Filtering
 vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --remove-filtered-all --recode --indv NORMAL --indv TUMOR | awk ' BEGIN {OFS="\t"} {if(substr($0,0,2) != "##") {t=$10; $10=$11; $11=t } ;print } ' >  pairedVariants/mutect2.snp.somatic.vcf
-
-
-
-##vardict
+  
+# Variants Vardict
 java -XX:ParallelGCThreads=1 -Xmx4G -classpath $VARDICT_HOME/lib/VarDict-1.5.1.jar:$VARDICT_HOME/lib/commons-cli-1.2.jar:$VARDICT_HOME/lib/jregex-1.2_01.jar:$VARDICT_HOME/lib/htsjdk-2.8.0.jar com.astrazeneca.vardict.Main   -G ${REF}/Homo_sapiens.GRCh37.fa   -N tumor_pair   -b "alignment/tumor/tumor.sorted.dup.recal.bam|alignment/normal/normal.sorted.dup.recal.bam"  -C -f 0.02 -Q 10 -c 1 -S 2 -E 3 -g 4 -th 3 vardict.bed | $VARDICT_BIN/testsomatic.R   | perl $VARDICT_BIN/var2vcf_paired.pl     -N "TUMOR|NORMAL"     -f 0.02 -P 0.9 -m 4.25 -M  > pairedVariants/vardict.vcf
 
+# Filtering
 bcftools view -f PASS  -i 'INFO/STATUS ~ ".*Somatic"' pairedVariants/vardict.vcf | awk ' BEGIN {OFS="\t"} { if(substr($0,0,1) == "#" || length($4) == length($5)) {if(substr($0,0,2) != "##") {t=$10; $10=$11; $11=t} ; print}} ' > pairedVariants/vardict.snp.somatic.vcf
 
-##ensemble somatic
+#less pairedVariants/varscan2.snp.somatic.vcf
+#less pairedVariants/mutect2.snp.somatic.vcf
+#less pairedVariants/vardict.snp.somatic.vcf
 
+# Unified callset
 bcbio-variation-recall ensemble \
   --cores 2 --numpass 2 --names mutect2,varscan2,vardict \
   pairedVariants/ensemble.snp.somatic.vcf.gz \
@@ -294,7 +334,9 @@ bcbio-variation-recall ensemble \
   pairedVariants/varscan2.snp.somatic.vcf    \
   pairedVariants/vardict.snp.somatic.vcf
 
-# effect snpeff
+#zless pairedVariants/ensemble.snp.somatic.vcf.gz
+
+# SnpEff
 java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
   -o vcf \
@@ -303,5 +345,13 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   GRCh37.75 \
   pairedVariants/ensemble.snp.somatic.vcf.gz \
   > pairedVariants/ensemble.snp.somatic.snpeff.vcf
-
-
+#less -S pairedVariants/ensemble.snp.somatic.snpeff.vcf
+# Coverage Track
+for i in normal tumor
+do
+  igvtools count \
+    -f min,max,mean \
+    alignment/${i}/${i}.sorted.dup.recal.bam \
+    alignment/${i}/${i}.sorted.dup.recal.bam.tdf \
+    b37
+done
