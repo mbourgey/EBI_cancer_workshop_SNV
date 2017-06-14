@@ -5,7 +5,7 @@ export SNPEFF_HOME=$APP_EXT/snpEff
 export GATK_JAR=$APP_ROOT/GenomeAnalysisTK.jar
 export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6-full.jar
 export TRIMMOMATIC_JAR=$APP_ROOT/trimmomatic-0.36.jar
-export VARSCAN_JAR=$APP_EXT/varscan2/VarScan.v2.3.9.jar
+export VARSCAN_JAR=$APP_EXT/VarScan.v2.3.9.jar
 
 #conpair setup
 export CONPAIR_DIR=$APP_EXT/Conpair/
