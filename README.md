@@ -84,6 +84,7 @@ The initial structure of your folders should look like this:
 |-- savedResults             # Folder containing precomputed results
 |-- scripts                  # cheat sheet folder
 |-- adapters.fa              # fasta file containing the adapter used for sequencing
+|-- vardict.bed              # bed file containing the region of interest
 ```
 
 
