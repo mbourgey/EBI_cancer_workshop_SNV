@@ -24,30 +24,16 @@ For practical reasons we subsampled the reads from the sample because running th
 
 ### Environment setup
 ```{.bash}
-export APP_ROOT=/usr/local/
-export APP_EXT=/home/training/tools
-export GATK_OLD_JAR=$APP_EXT/GenomeAnalysisTK.jar
-export SNPEFF_HOME=$APP_ROOT/snpEff
-export GATK_JAR=$APP_ROOT/gatk-4.0.4.0/gatk-package-4.0.4.0-local.jar
-export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
-export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.38/trimmomatic-0.38.jar
-export VARSCAN_JAR=$APP_ROOT/VarScan/VarScan.v2.3.9.jar
 
-#conpair setup
-export CONPAIR_DIR=$APP_ROOT/Conpair/
-export CONPAIR_DATA=$CONPAIR_DIR/data
-export CONPAIR_SCRIPTS=$CONPAIR_DIR/scripts
-export PYTHONPATH=$APP_ROOT/Conpair/modules:$PYTHONPATH
+docker run --privileged -v /tmp:/tmp --network host -it -w $PWD -v $HOME:$HOME --user $UID:$GROUPS -v /etc/group:/etc/group  -v /etc/passwd:/etc/passwd  c3genomics/genpipes:0.8
 
 
-#set-up PATH
-export PATH=$CONPAIR_SCRIPTS:${APP_EXT}:${APP_EXT}/IGVTools:$PATH
+export REF=$MUGQIC_INSTALL_HOME/genomes/species/Homo_sapiens.GRCh37/
 
 
-export REF=/home/training/ebicancerworkshop2018/reference
+cd $HOME/ebicancerworkshop2019/SNV
 
-
-cd $HOME/ebicancerworkshop2018/SNV
+module load mugqic/java/openjdk-jdk1.8.0_72 mugqic/bvatools/1.6 mugqic/trimmomatic/0.36 mugqic/samtools/1.9 mugqic/bwa/0.7.17 mugqic/GenomeAnalysisTK/4.1.0.0 mugqic/R_Bioconductor/3.5.0_3.7 mugqic/Conpair/0.2 mugqic/VarScan/2.4.3 mugqic/vcftools/0.1.14
 
 ```
 
@@ -55,6 +41,7 @@ cd $HOME/ebicancerworkshop2018/SNV
 These are all already installed, but here are the original links.
 
   * [BVATools](https://bitbucket.org/mugqic/bvatools/downloads)
+  * [trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
   * [SAMTools](http://sourceforge.net/projects/samtools/)
   * [IGV](http://www.broadinstitute.org/software/igv/download)
   * [BWA](http://bio-bwa.sourceforge.net/)
@@ -78,7 +65,6 @@ The initial structure of your folders should look like this:
 |-- savedResults             # Folder containing precomputed results
 |-- scripts                  # cheat sheet folder
 |-- adapters.fa              # fasta file containing the adapter used for sequencing
-|-- vardict.bed              # bed file containing the region of interest
 ```
 
 
@@ -147,7 +133,7 @@ Let's look at the data:
 ```{.bash}
 # Generate original QC
 mkdir originalQC/
-java8 -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
+java -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
   --read1 raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz \
   --read2 raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz \
   --threads 2 --regionName normalrun62DVGAAXX_1 --output originalQC/
@@ -218,7 +204,7 @@ do
   OUTPUT_DIR=`echo $DIR | sed 's/raw_reads/reads/g'`;
 
   mkdir -p $OUTPUT_DIR;
-  java8 -Xmx2G -cp $TRIMMOMATIC_JAR org.usadellab.trimmomatic.TrimmomaticPE -threads 2 -phred64 \
+  java -Xmx2G -cp $TRIMMOMATIC_JAR org.usadellab.trimmomatic.TrimmomaticPE -threads 2 -phred64 \
     $file \
     ${file%.pair1.fastq.gz}.pair2.fastq.gz \
     ${OUTPUT_DIR}/${FNAME%.64.pair1.fastq.gz}.t30l50.pair1.fastq.gz \
@@ -270,10 +256,10 @@ do
   bwa mem -M -t 3 \
     -R "@RG\\tID:${SNAME}_${RUNID}_${LANE}\\tSM:${SNAME}\\t\
 LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMINA" \
-    ${REF}/Homo_sapiens.GRCh37.fa \
+    ${REF}/genome/bwa_index/Homo_sapiens.GRCh37.fa \
     $file \
     ${file%.pair1.fastq.gz}.pair2.fastq.gz \
-  | java8 -Xmx2G -jar ${GATK_JAR}  SortSam \
+  | java -Xmx2G -jar ${GATK_JAR}  SortSam \
     -I /dev/stdin \
     -O ${OUTPUT_DIR}/${SNAME}.sorted.bam \
     --CREATE_INDEX true --SORT_ORDER coordinate --MAX_RECORDS_IN_RAM 500000
@@ -297,7 +283,7 @@ Since we identified the reads in the BAM with read groups, even after the mergin
 
 ```{.bash}
 # Merge Data
-java8 -Xmx2G -jar ${GATK_JAR}  MergeSamFiles \
+java -Xmx2G -jar ${GATK_JAR}  MergeSamFiles \
   -I alignment/normal/run62DPDAAXX_8/normal.sorted.bam \
   -I alignment/normal/run62DVGAAXX_1/normal.sorted.bam \
   -I alignment/normal/run62MK3AAXX_5/normal.sorted.bam \
@@ -310,7 +296,7 @@ java8 -Xmx2G -jar ${GATK_JAR}  MergeSamFiles \
   -O alignment/normal/normal.sorted.bam \
   --CREATE_INDEX true
 
-java8 -Xmx2G -jar ${GATK_JAR}  MergeSamFiles \
+java -Xmx2G -jar ${GATK_JAR}  MergeSamFiles \
   -I alignment/tumor/run62DU0AAXX_8/tumor.sorted.bam \
   -I alignment/tumor/run62DUUAAXX_8/tumor.sorted.bam \
   -I alignment/tumor/run62DVMAAXX_4/tumor.sorted.bam \
@@ -421,17 +407,21 @@ It basically runs in 2 steps:
 
 ```{.bash}
 # Realign
-java8 -Xmx2G  -jar ${GATK_OLD_JAR} \
+#switch to old GATK 3.8
+module unload  mugqic/GenomeAnalysisTK/4.1.0.0
+module load mugqic/GenomeAnalysisTK/3.8
+
+java -Xmx2G  -jar ${GATK_JAR} \
   -T RealignerTargetCreator \
-  -R ${REF}/Homo_sapiens.GRCh37.fa \
+  -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
   -o alignment/normal/realign.intervals \
   -I alignment/normal/normal.sorted.bam \
   -I alignment/tumor/tumor.sorted.bam \
   -L 9
 
-java8 -Xmx2G -jar ${GATK_OLD_JAR} \
+java -Xmx2G -jar ${GATK_JAR} \
   -T IndelRealigner \
-  -R ${REF}/Homo_sapiens.GRCh37.fa \
+  -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
   -targetIntervals alignment/normal/realign.intervals \
   --nWayOut .realigned.bam \
   -I alignment/normal/normal.sorted.bam \
@@ -440,6 +430,11 @@ java8 -Xmx2G -jar ${GATK_OLD_JAR} \
   mv normal.sorted.realigned.ba* alignment/normal/
   mv tumor.sorted.realigned.ba* alignment/tumor/
 
+
+#return to GATK 4
+module unload mugqic/GenomeAnalysisTK/3.8
+module load  mugqic/GenomeAnalysisTK/4.1.0.0
+  
 ```
 **Why did we use both normal and tumor together? ** [Solution](solutions/_realign3.md)
 
@@ -475,13 +470,13 @@ Here we will use picards approach:
 
 ```{.bash}
 # Mark Duplicates
-java8 -Xmx2G -jar ${GATK_JAR}  MarkDuplicates \
+java -Xmx2G -jar ${GATK_JAR}  MarkDuplicates \
   --REMOVE_DUPLICATES false --CREATE_INDEX true \
   -I alignment/normal/normal.sorted.realigned.bam \
   -O alignment/normal/normal.sorted.dup.bam \
   --METRICS_FILE alignment/normal/normal.sorted.dup.metrics
 
-java8 -Xmx2G -jar ${GATK_JAR}  MarkDuplicates \
+java -Xmx2G -jar ${GATK_JAR}  MarkDuplicates \
   --REMOVE_DUPLICATES false --CREATE_INDEX=true \
   -I alignment/tumor/tumor.sorted.realigned.bam \
   -O alignment/tumor/tumor.sorted.dup.bam \
@@ -519,15 +514,15 @@ GATK BaseRecalibrator:
 # Recalibrate
 for i in normal tumor
 do
-  java8 -Xmx2G -jar ${GATK_JAR} BaseRecalibrator \
-    -R ${REF}/Homo_sapiens.GRCh37.fa \
-    --known-sites ${REF}/dbSnp-137_chr9.vcf.gz \
+  java -Xmx2G -jar ${GATK_JAR} BaseRecalibrator \
+    -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
+    --known-sites ${REF}/annotations/Homo_sapiens.GRCh37.dbSNP150.vcf.gz \
     -L 9:130215000-130636000 \
     -O alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -I alignment/${i}/${i}.sorted.dup.bam
 
-    java8 -Xmx2G -jar ${GATK_JAR} ApplyBQSR \
-      -R ${REF}/Homo_sapiens.GRCh37.fa \
+    java -Xmx2G -jar ${GATK_JAR} ApplyBQSR \
+      -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
       -bqsr alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
       -O alignment/${i}/${i}.sorted.dup.recal.bam \
       -I alignment/${i}/${i}.sorted.dup.bam
@@ -560,23 +555,27 @@ To estimate these metrics we will use the Conpair tool. This run in 3 steps:
 
 
 ```{.bash}
+#switch to old GATK 3.8
+module unload  mugqic/GenomeAnalysisTK/4.1.0.0
+module load mugqic/GenomeAnalysisTK/3.8
+
 #pileup for the tumor sample
-run_gatk_pileup_for_sample.py \
+#run_gatk_pileup_for_sample.py \
   -m 6G \
-  -J java8 \
-  -G $GATK_OLD_JAR \
+  -J java \
+  -G $GATK_JAR \
   -D $CONPAIR_DIR \
-  -R ${REF}/Homo_sapiens.GRCh37.fa \
+  -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
   -B alignment/tumor/tumor.sorted.dup.recal.bam \
   -O alignment/tumor/tumor.sorted.dup.recal.gatkPileup
 
 #pileup for the normal sample
 run_gatk_pileup_for_sample.py \
   -m 2G \
-  -J java8 \
-  -G $GATK_OLD_JAR \
+  -J java \
+  -G $GATK_JAR \
   -D $CONPAIR_DIR \
-  -R ${REF}/Homo_sapiens.GRCh37.fa \
+  -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
   -B alignment/normal/normal.sorted.dup.recal.bam \
   -O alignment/normal/normal.sorted.dup.recal.gatkPileup
 
@@ -594,6 +593,10 @@ estimate_tumor_normal_contamination.py  \
   -T alignment/tumor/tumor.sorted.dup.recal.gatkPileup \
    > TumorPair.contamination.tsv
 
+#return to GATK 4
+module unload mugqic/GenomeAnalysisTK/3.8
+module load  mugqic/GenomeAnalysisTK/4.1.0.0
+   
 ```
 
 Look at the concordance and contamination metrics file
@@ -613,9 +616,13 @@ Here we'll use the GATK one
 
 ```{.bash}
 # Get Depth
+#switch to old GATK 3.8
+module unload  mugqic/GenomeAnalysisTK/4.1.0.0
+module load mugqic/GenomeAnalysisTK/3.8
+
 for i in normal tumor
 do
-  java8  -Xmx2G -jar ${GATK_OLD_JAR} \
+  java  -Xmx2G -jar ${GATK_JAR} \
     -T DepthOfCoverage \
     --omitDepthOutputAtEachBase \
     --summaryCoverageThreshold 10 \
@@ -623,12 +630,15 @@ do
     --summaryCoverageThreshold 50 \
     --summaryCoverageThreshold 100 \
     --start 1 --stop 500 --nBins 499 -dt NONE \
-    -R ${REF}/Homo_sapiens.GRCh37.fa \
+    -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
     -o alignment/${i}/${i}.sorted.dup.recal.coverage \
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -L 9:130215000-130636000 
 done
 
+#return to GATK 4
+module unload mugqic/GenomeAnalysisTK/3.8
+module load  mugqic/GenomeAnalysisTK/4.1.0.0
 ```
 [note on DepthOfCoverage command](notes/_DOC.md)
 
@@ -655,8 +665,8 @@ These metrics are computed using Picard:
 # Get insert size
 for i in normal tumor
 do
-  java8 -Xmx2G -jar ${GATK_JAR}  CollectInsertSizeMetrics \
-    -R ${REF}/Homo_sapiens.GRCh37.fa \
+  java -Xmx2G -jar ${GATK_JAR}  CollectInsertSizeMetrics \
+    -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -O alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.tsv \
     -H alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.histo.pdf \
@@ -688,8 +698,8 @@ We prefer the Picard way of computing metrics:
 # Get alignment metrics
 for i in normal tumor
 do
-  java8 -Xmx2G -jar ${GATK_JAR}  CollectAlignmentSummaryMetrics \
-    -R ${REF}/Homo_sapiens.GRCh37.fa \
+  java -Xmx2G -jar ${GATK_JAR}  CollectAlignmentSummaryMetrics \
+    -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -O alignment/${i}/${i}.sorted.dup.recal.metric.alignment.tsv \
     --METRIC_ACCUMULATION_LEVEL LIBRARY
@@ -745,8 +755,8 @@ Varscan somatic caller expects both a normal and a tumor file in SAMtools pileup
 # SAMTools mpileup
 for i in normal tumor
 do
-samtools mpileup -L 1000 -B -q 1 \
-  -f ${REF}/Homo_sapiens.GRCh37.fa \
+samtools mpileup -B -q 1 \
+  -f ${REF}/genome/Homo_sapiens.GRCh37.fa \
   -r 9:130215000-130636000 \
   alignment/${i}/${i}.sorted.dup.recal.bam \
   > pairedVariants/${i}.mpileup
@@ -760,7 +770,7 @@ Now we can run varscan:
 
 ```{.bash}
 # varscan
-java8 -Xmx2G -jar ${VARSCAN_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan2 --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+java -Xmx2G -jar ${VARSCAN2_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan2 --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
 
 ```
 
@@ -777,22 +787,21 @@ grep "^#\|SS=2" pairedVariants/varscan2.snp.vcf > pairedVariants/varscan2.snp.so
 
 ```{.bash}
 # Variants MuTecT2
-java8 -Xmx2G -jar ${GATK_OLD_JAR} -T MuTect2 \
-  -R ${REF}/Homo_sapiens.GRCh37.fa \
-  --dbsnp ${REF}/dbSnp-137_chr9.vcf.gz \
-  --cosmic ${REF}/b37_cosmic_v70_140903.vcf.gz \
-  --input_file:normal alignment/normal/normal.sorted.dup.recal.bam \
-  --input_file:tumor alignment/tumor/tumor.sorted.dup.recal.bam \
-  --out pairedVariants/mutect2.vcf \
+java -Xmx2G -jar ${GATK_JAR} Mutect2 \
+  -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
+  -I alignment/normal/normal.sorted.dup.recal.bam \
+  -I alignment/tumor/tumor.sorted.dup.recal.bam \
+  -normal normal \
+  -O pairedVariants/mutect2.vcf \
   -L 9:130215000-130636000
-  
+
 ```
 
 Then we can extract somatic SNPs:
 
 ```{.bash}
 # Filtering
-vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --remove-filtered-all --recode --indv NORMAL --indv TUMOR | awk ' BEGIN {OFS="\t"} {if(substr($0,0,2) != "##") {t=$10; $10=$11; $11=t } ;print } ' >  pairedVariants/mutect2.snp.somatic.vcf
+vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --remove-filtered-all --recode --indv NORMAL --indv TUMOR >  pairedVariants/mutect2.snp.somatic.vcf
   
 ```
 
