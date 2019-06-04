@@ -33,9 +33,9 @@ export REF=$MUGQIC_INSTALL_HOME/genomes/species/Homo_sapiens.GRCh37/
 
 cd $HOME/ebicancerworkshop2019/SNV
 
-module load mugqic/java/openjdk-jdk1.8.0_72 mugqic/bvatools/1.6 mugqic/trimmomatic/0.36 mugqic/samtools/1.9 mugqic/bwa/0.7.17 mugqic/GenomeAnalysisTK/4.1.0.0 mugqic/R_Bioconductor/3.5.0_3.7 mugqic/Conpair/0.2 mugqic/VarScan/2.4.3 mugqic/vcftools/0.1.14
 
 ```
+
 
 ### Software requirements
 These are all already installed, but here are the original links.
@@ -48,8 +48,16 @@ These are all already installed, but here are the original links.
   * [Genome Analysis Toolkit](http://www.broadinstitute.org/gatk/)
   * [SnpEff](http://snpeff.sourceforge.net/)
   * [Varscan2](http://varscan.sourceforge.net/)
-  * [conpair](https://github.com/nygenome/Conpair)
+  * [vardict](https://github.com/AstraZeneca-NGS/VarDictJava)
   * [bcbio variation](https://github.com/chapmanb/bcbio.variation)
+
+
+We should load the corresponding modules 
+
+```{.bash}
+module load mugqic/java/openjdk-jdk1.8.0_72 mugqic/bvatools/1.6 mugqic/trimmomatic/0.36 mugqic/samtools/1.9 mugqic/bwa/0.7.17 mugqic/GenomeAnalysisTK/4.1.0.0 mugqic/R_Bioconductor/3.5.0_3.7mugqic/VarScan/2.4.3 mugqic/vcftools/0.1.14 mugqic/bcftools/1.9 mugqic/VarDictJava/1.4.9 mugqic/bcbio.variation.recall/0.1.7 mugqic/snpEff/4.3 mugqic/igvtools/2.3.67
+
+```
 
 
 ## Original Setup
@@ -535,7 +543,7 @@ done
 # Extract BAM metrics
 Once your whole bam is generated, it's always a good thing to check the data again to see if everything makes sens.
 
-**Contamination and tumor/normal concordance**
+**Contamination**
 It tells you if your date are contaminated or if a mix-up had occured
 
 **Compute coverage**
@@ -547,56 +555,33 @@ It tells you if your library worked
 **Alignment metrics**
 It tells you if your sample and you reference fit together
 
-## Estimate Normal/tumor concordance and contamination
-To estimate these metrics we will use the Conpair tool. This run in 3 steps:
- 1 - Generate GATK pileup
- 2 - Estimate the normal-tumor concrodance
- 3 - Estimate contamination
+## Estimate Normal/tumor contamination
+To estimate these metrics we will use the GATK tool. This run in 2 steps:
+ 1 - Generate GATK pileup tables
+ 2 - Estimate contamination
 
 
 ```{.bash}
-#switch to old GATK 3.8
-module unload  mugqic/GenomeAnalysisTK/4.1.0.0
-module load mugqic/GenomeAnalysisTK/3.8
+#Pileup table for the tumor sample
+java  -Xmx2G -jar ${GATK_JAR} GetPileupSummaries \
+   -I alignment/tumor/tumor.sorted.dup.recal.bam \
+   -V $REF/annotations/Homo_sapiens.GRCh37.gnomad.exomes.r2.0.1.sites.no-VEP.nohist.tidy.vcf.gz \
+   -L 9:130215000-130636000 \
+   -O alignment/tumor/tumor.pileups.table
 
-#pileup for the tumor sample
-#run_gatk_pileup_for_sample.py \
-  -m 6G \
-  -J java \
-  -G $GATK_JAR \
-  -D $CONPAIR_DIR \
-  -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
-  -B alignment/tumor/tumor.sorted.dup.recal.bam \
-  -O alignment/tumor/tumor.sorted.dup.recal.gatkPileup
-
-#pileup for the normal sample
-run_gatk_pileup_for_sample.py \
-  -m 2G \
-  -J java \
-  -G $GATK_JAR \
-  -D $CONPAIR_DIR \
-  -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
-  -B alignment/normal/normal.sorted.dup.recal.bam \
-  -O alignment/normal/normal.sorted.dup.recal.gatkPileup
-
-#Check concordance
-verify_concordance.py -H \
-  -M  ${CONPAIR_DATA}/markers/GRCh37.autosomes.phase3_shapeit2_mvncall_integrated.20130502.SNV.genotype.sselect_v4_MAF_0.4_LD_0.8.txt \
-  -N alignment/normal/normal.sorted.dup.recal.gatkPileup \
-  -T alignment/tumor/tumor.sorted.dup.recal.gatkPileup \
-  > TumorPair.concordance.tsv 
+#Pileup table for the normal sample 
+java  -Xmx2G -jar ${GATK_JAR} GetPileupSummaries \
+   -I alignment/normal/normal.sorted.dup.recal.bam \
+   -V $REF/annotations/Homo_sapiens.GRCh37.gnomad.exomes.r2.0.1.sites.no-VEP.nohist.tidy.vcf.gz \
+   -L 9:130215000-130636000 \
+   -O alignment/normal/normal.pileups.table
 
 #Esitmate contamination
-estimate_tumor_normal_contamination.py  \
-  -M ${CONPAIR_DATA}/markers/GRCh37.autosomes.phase3_shapeit2_mvncall_integrated.20130502.SNV.genotype.sselect_v4_MAF_0.4_LD_0.8.txt \
-  -N alignment/normal/normal.sorted.dup.recal.gatkPileup \
-  -T alignment/tumor/tumor.sorted.dup.recal.gatkPileup \
-   > TumorPair.contamination.tsv
+java  -Xmx2G -jar ${GATK_JAR} CalculateContamination \
+   -I alignment/tumor/tumor.pileups.table \
+   -matched alignment/normal/normal.pileups.table \
+   -O contamination.table
 
-#return to GATK 4
-module unload mugqic/GenomeAnalysisTK/3.8
-module load  mugqic/GenomeAnalysisTK/4.1.0.0
-   
 ```
 
 Look at the concordance and contamination metrics file
@@ -723,9 +708,10 @@ less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
 
 Most of SNV caller use either a Baysian, a threshold or a t-test approach to do the calling
 
- Here we will try 2 variant callers.
+ Here we will try 3 variant callers.
 - Varscan 2
 - MuTecT2
+- Vardict
 
 
 
@@ -770,7 +756,13 @@ Now we can run varscan:
 
 ```{.bash}
 # varscan
-java -Xmx2G -jar ${VARSCAN2_JAR} somatic pairedVariants/normal.mpileup pairedVariants/tumor.mpileup pairedVariants/varscan2 --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+java -Xmx2G -jar ${VARSCAN2_JAR} somatic \
+   pairedVariants/normal.mpileup \
+   pairedVariants/tumor.mpileup \
+   pairedVariants/varscan2 \
+   --output-vcf 1 \
+   --strand-filter 1 \
+   --somatic-p-value 0.001 
 
 ```
 
@@ -792,6 +784,8 @@ java -Xmx2G -jar ${GATK_JAR} Mutect2 \
   -I alignment/normal/normal.sorted.dup.recal.bam \
   -I alignment/tumor/tumor.sorted.dup.recal.bam \
   -normal normal \
+  -tumor tumor \
+  --germline-resource $REF/annotations/Homo_sapiens.GRCh37.gnomad.exomes.r2.0.1.sites.no-VEP.nohist.tidy.vcf.gz \
   -O pairedVariants/mutect2.vcf \
   -L 9:130215000-130636000
 
@@ -801,18 +795,46 @@ Then we can extract somatic SNPs:
 
 ```{.bash}
 # Filtering
-vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --remove-filtered-all --recode --indv NORMAL --indv TUMOR >  pairedVariants/mutect2.snp.somatic.vcf
+java -Xmx2G -jar ${GATK_JAR} FilterMutectCalls \
+   -V pairedVariants/mutect2.vcf \
+   --contamination-table contamination.table \
+   -O pairedVariants/mutect2.filtered.vcf
+
+vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --recode | sed -e "s|normal|NORMAL|g" -e "s|tumor|TUMOR|g"  >  pairedVariants/mutect2.snp.somatic.vcf
   
 ```
 
 
+## Vardict
+
+```{.bash}
+$VARDICT_HOME/bin/VarDict \
+  -G ${REF}/genome/Homo_sapiens.GRCh37.fa \
+  -N tumor_pair \
+  -b "alignment/tumor/tumor.sorted.dup.recal.bam|alignment/normal/normal.sorted.dup.recal.bam"  \
+  -C -Q 10 -c 1 -S 2 -E 3 -g 4 -th 3 \
+  | $VARDICT_BIN/testsomatic.R   \
+  | $VARDICT_BIN/var2vcf_paired.pl -N "TUMOR|NORMAL" -f 0.05 > pairedVariants/vardict.vcf
+  
+```
+
+Then we can extract somatic SNPs:
+
+```{.bash}
+bcftools filter \
+   -i 'FILTER="PASS"&&TYPE="snp"&&INFO/STATUS="StrongSomatic"' \
+   pairedVariants/vardict.vcf \
+   | awk ' BEGIN {OFS="\t"} \
+   { if(substr($0,0,1) == "#" || length($4) == length($5)) {if(substr($0,0,2) != "##") \
+   {t=$10; $10=$11; $11=t} ; print}} ' > pairedVariants/vardict.snp.somatic.vcf
+```
 
 Now we have somatic variants from all two methods. Let's look at the results. 
 
 ```{.bash}
 less pairedVariants/varscan2.snp.somatic.vcf
 less pairedVariants/mutect2.snp.somatic.vcf
-
+less pairedVariants/vardict.snp.somatic.vcf
 ```
 
 **could you notice something from these vcf files ?** [Solution](solutions/_vcf1.md)
@@ -838,11 +860,12 @@ As we don't have enough variant for the full ensemble approach we will just laun
 ```{.bash}
 # Unified callset
 bcbio-variation-recall ensemble \
-  --cores 2 --numpass 2 --names mutect2,varscan2 \
+  --cores 2 --numpass 2 --names mutect2,varscan2,vardict \
   pairedVariants/ensemble.snp.somatic.vcf.gz \
-  ${REF}/Homo_sapiens.GRCh37.fa \
-  pairedVariants/mutect2.snp.somatic.vcf    \
-  pairedVariants/varscan2.snp.somatic.vcf
+  ${REF}/genome/Homo_sapiens.GRCh37.fa \
+  pairedVariants/mutect2.snp.somatic.vcf \
+  pairedVariants/varscan2.snp.somatic.vcf \
+  pairedVariants/vardict.snp.somatic.vcf
 
 ```
 
@@ -864,7 +887,7 @@ Let's run snpEff:
 
 ```{.bash}
 # SnpEff
-java8  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
+java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   eff -v -c ${SNPEFF_HOME}/snpEff.config \
   -o vcf \
   -i vcf \
@@ -878,7 +901,7 @@ You can learn more about the meaning of snpEff annotations [here](http://snpeff.
 
 Use less to look at the new vcf file: 
 
-```
+```{.bash}
 less -S pairedVariants/ensemble.snp.somatic.snpeff.vcf
 ```
 
@@ -948,6 +971,14 @@ Explore/play with the data:
 [solution](solutions/_igv1.md)
 
 **Open the high impact position in IGV, what do you see?** [solution](solutions/_snpEff5.md)
+
+# Exit the container environment
+
+```{.bash}
+exit
+
+```
+
 
 ## Aknowledgments
 I would like to thank and acknowledge Louis Letourneau for this help and for sharing his material. The format of the tutorial has been inspired from Mar Gonzalez Porta. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Robert Eveleigh, Edouard Henrion, Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.
