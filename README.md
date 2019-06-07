@@ -25,7 +25,9 @@ For practical reasons we subsampled the reads from the sample because running th
 ### Environment setup
 ```{.bash}
 
-docker run --privileged -v /tmp:/tmp --network host -it -w $PWD -v $HOME:$HOME --user $UID:$GROUPS -v /etc/group:/etc/group  -v /etc/passwd:/etc/passwd -e DISPLAY=$DISPLAY -v /etc/fonts/:/etc/fonts/  c3genomics/genpipes:0.8
+docker run --privileged -v /tmp:/tmp --network host -it -w $PWD -v $HOME:$HOME \
+--user $UID:$GROUPS -v /etc/group:/etc/group  -v /etc/passwd:/etc/passwd \
+-e DISPLAY=$DISPLAY -v /etc/fonts/:/etc/fonts/  c3genomics/genpipes:0.8
 
 
 export REF=$MUGQIC_INSTALL_HOME/genomes/species/Homo_sapiens.GRCh37/
@@ -55,7 +57,20 @@ These are all already installed, but here are the original links.
 We should load the corresponding modules 
 
 ```{.bash}
-module load mugqic/java/openjdk-jdk1.8.0_72 mugqic/bvatools/1.6 mugqic/trimmomatic/0.36 mugqic/samtools/1.9 mugqic/bwa/0.7.17 mugqic/GenomeAnalysisTK/4.1.0.0 mugqic/R_Bioconductor/3.5.0_3.7mugqic/VarScan/2.4.3 mugqic/vcftools/0.1.14 mugqic/bcftools/1.9 mugqic/VarDictJava/1.4.9 mugqic/bcbio.variation.recall/0.1.7 mugqic/snpEff/4.3 mugqic/igvtools/2.3.67
+module load mugqic/java/openjdk-jdk1.8.0_72 \
+   mugqic/bvatools/1.6 \
+   mugqic/trimmomatic/0.36 \
+   mugqic/samtools/1.9 \
+   mugqic/bwa/0.7.17 \
+   mugqic/GenomeAnalysisTK/4.1.0.0 \
+   mugqic/R_Bioconductor/3.5.0_3.7 \
+   mugqic/VarScan/2.4.3 \
+   mugqic/vcftools/0.1.14 \
+   mugqic/bcftools/1.9 \
+   mugqic/VarDictJava/1.4.9 \
+   mugqic/bcbio.variation.recall/0.1.7 \
+   mugqic/snpEff/4.3 \
+   mugqic/igvtools/2.3.67
 
 ```
 
