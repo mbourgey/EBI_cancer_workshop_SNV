@@ -27,7 +27,7 @@ For practical reasons we subsampled the reads from the sample because running th
 
 docker run --privileged -v /tmp:/tmp --network host -it -w $PWD -v $HOME:$HOME \
 --user $UID:$GROUPS -v /etc/group:/etc/group  -v /etc/passwd:/etc/passwd \
--e DISPLAY=$DISPLAY -v /etc/fonts/:/etc/fonts/  c3genomics/genpipes:0.8
+-v /etc/fonts/:/etc/fonts/  c3genomics/genpipes:0.8
 
 
 export REF=$MUGQIC_INSTALL_HOME/genomes/species/Homo_sapiens.GRCh37/
@@ -123,9 +123,7 @@ zcat raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz | head -n4
 
 ```
 
-**What was special about the output ?**
-
-**Why was it like that?** [Solution](solutions/_fastq2.md)
+**What was special about the output ? Why was it like that?** [Solution](solutions/_fastq2.md)
 
 You could also just count the reads
 
@@ -155,7 +153,7 @@ Let's look at the data:
 
 ```{.bash}
 # Generate original QC
-mkdir originalQC/
+mkdir -p originalQC/
 java -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
   --read1 raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz \
   --read2 raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz \
