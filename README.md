@@ -524,7 +524,7 @@ Dupliate reads number are estimated separately for each library.
 
 It runs in 2 steps:
 
-    1 -  Build covariates based on context and known snp sites
+    1 - Build covariates based on context and known snp sites
     2 - Correct the reads based on these metrics
 
 
@@ -569,8 +569,9 @@ It tells you if your sample and you reference fit together
 
 ## Estimate Normal/tumor contamination
 To estimate these metrics we will use the GATK tool. This run in 2 steps:  
-  1 - Generate GATK pileup tables
-  2 - Estimate contamination
+
+    1 - Generate GATK pileup tables
+    2 - Estimate contamination
 
 
 ```{.bash}
