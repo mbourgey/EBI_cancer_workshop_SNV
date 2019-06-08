@@ -604,7 +604,7 @@ less contamination.table
 
 ```
 
-**What do you think about these estimations ?** [solution](solutions/_conta.md)
+**What do you think about this estimation ?** [solution](solutions/_conta.md)
 
 ## Compute coverage
 Both GATK and BVATools have depth of coverage tools. 
