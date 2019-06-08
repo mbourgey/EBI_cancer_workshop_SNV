@@ -16,4 +16,4 @@ samtools view -c -F4 alignment/normal/normal.sorted.bam
 
 Number of mapped reads :
 
-	204626
+	204627

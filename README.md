@@ -249,7 +249,6 @@ Exercice:
 
 **How does it look now ?** [Solution](solutions/_trim3.md)
 
-__TO DO: check for trimming with sliding windows__
 
 
 # Alignment
@@ -257,7 +256,7 @@ The raw reads are now cleaned up of artefacts we can align each lane separatly.
 
 **Why should this be done separatly?** [Solution](solutions/_aln1.md)
 
-**Why is it important to set Read Group information ?** [Solution](solutions_aln2.md)
+**Why is it important to set Read Group information ?** [Solution](solutions/_aln2.md)
 
 ##Alignment with bwa-mem
 
@@ -274,13 +273,13 @@ do
 
   mkdir -p $OUTPUT_DIR;
 
-  bwa mem -M -t 3 \
+  bwa mem -M -t 5 \
     -R "@RG\\tID:${SNAME}_${RUNID}_${LANE}\\tSM:${SNAME}\\t\
 LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMINA" \
     ${REF}/genome/bwa_index/Homo_sapiens.GRCh37.fa \
     $file \
     ${file%.pair1.fastq.gz}.pair2.fastq.gz \
-  | java -Xmx2G -jar ${GATK_JAR}  SortSam \
+  | java -Xmx6G -jar ${GATK_JAR}  SortSam \
     -I /dev/stdin \
     -O ${OUTPUT_DIR}/${SNAME}.sorted.bam \
     --CREATE_INDEX true --SORT_ORDER coordinate --MAX_RECORDS_IN_RAM 500000
@@ -354,11 +353,10 @@ samtools view -H alignment/normal/normal.sorted.bam | grep "^@RG"
 
 You should have your 9 read group entries.
 
-**Why did we use the -H switch? ** [Solution](solutions/_merge1.md)
+**Why did we use the -H switch?** [Solution](solutions/_merge1.md)
 
 **Try without. What happens?** [Solution](solutions/_merge2.md)
 
-[lane merging note](notes/_merge1.md)
 
 ## SAM/BAM exploration
 Let's spend some time to explore bam files.
@@ -457,7 +455,7 @@ module unload mugqic/GenomeAnalysisTK/3.8
 module load  mugqic/GenomeAnalysisTK/4.1.0.0
   
 ```
-**Why did we use both normal and tumor together? ** [Solution](solutions/_realign3.md)
+**Why did we use both normal and tumor together?** [Solution](solutions/_realign3.md)
 
 **How could we make this go faster ?** [Solution](solutions/_realign1.md)
 
@@ -514,7 +512,7 @@ less alignment/normal/normal.sorted.dup.metrics
 
 **How many duplicates were there ?** [Solution](solutions/_markdup4.md)
 
-We can see that it computed separate measures for each library.
+Dupliate reads number are estimated separately for each library.
  
 **Why is this important to do not combine everything ?** [Solution](solutions/_markdup5.md)
 
@@ -524,9 +522,10 @@ We can see that it computed separate measures for each library.
 **Why do we need to recalibrate base quality scores ?** [Solution](solutions/_recal1.md)
 
 
-It runs in 2 steps, 
-1- Build covariates based on context and known snp sites
-2- Correct the reads based on these metrics
+It runs in 2 steps:
+
+    1 -  Build covariates based on context and known snp sites
+    2 - Correct the reads based on these metrics
 
 
 GATK BaseRecalibrator:
@@ -569,9 +568,9 @@ It tells you if your library worked
 It tells you if your sample and you reference fit together
 
 ## Estimate Normal/tumor contamination
-To estimate these metrics we will use the GATK tool. This run in 2 steps:
- 1 - Generate GATK pileup tables
- 2 - Estimate contamination
+To estimate these metrics we will use the GATK tool. This run in 2 steps:  
+  1 - Generate GATK pileup tables
+  2 - Estimate contamination
 
 
 ```{.bash}
