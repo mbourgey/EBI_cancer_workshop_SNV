@@ -597,15 +597,14 @@ java  -Xmx2G -jar ${GATK_JAR} CalculateContamination \
 
 ```
 
-Look at the concordance and contamination metrics file
+Look at the contamination result file
 
 ```{.bash}
-less TumorPair.concordance.tsv
-less TumorPair.contamination.tsv
+less contamination.table
 
 ```
 
-**What do you think about these estimations ?** [solution](solutions/_Conpair.md)
+**What do you think about these estimations ?** [solution](solutions/_conta.md)
 
 ## Compute coverage
 Both GATK and BVATools have depth of coverage tools. 
