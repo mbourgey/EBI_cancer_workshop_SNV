@@ -639,7 +639,7 @@ module load  mugqic/GenomeAnalysisTK/4.1.0.0
 ```
 [note on DepthOfCoverage command](notes/_DOC.md)
 
-Coverage is the expected ~70-110x in these project
+In this project the expected coverages are : ~40x for the normal and ~50x for the tumor
 
 Look at the coverage:
 
