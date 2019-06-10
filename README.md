@@ -88,7 +88,9 @@ The initial structure of your folders should look like this:
 |-- savedResults             # Folder containing precomputed results
 |-- scripts                  # cheat sheet folder
 |-- adapters.fa              # fasta file containing the adapter used for sequencing
+|-- vardict.bed              # bed file of the region
 ```
+
 
 
 ### Cheat file
@@ -733,7 +735,7 @@ https://www.biostars.org/p/19104/
 In our case, let's start with:
 
 ```{.bash}
-mkdir pairedVariants
+mkdir -p pairedVariants
 
 ```
 
@@ -774,7 +776,7 @@ java -Xmx2G -jar ${VARSCAN2_JAR} somatic \
    pairedVariants/varscan2 \
    --output-vcf 1 \
    --strand-filter 1 \
-   --somatic-p-value 0.001 
+   --somatic-p-value 0.05 
 
 ```
 
@@ -812,7 +814,10 @@ java -Xmx2G -jar ${GATK_JAR} FilterMutectCalls \
    --contamination-table contamination.table \
    -O pairedVariants/mutect2.filtered.vcf
 
-vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --recode | sed -e "s|normal|NORMAL|g" -e "s|tumor|TUMOR|g"  >  pairedVariants/mutect2.snp.somatic.vcf
+vcftools --vcf pairedVariants/mutect2.vcf 
+   --stdout --remove-indels --recode \
+   | sed -e "s|normal|NORMAL|g" -e "s|tumor|TUMOR|g"  \
+   >  pairedVariants/mutect2.snp.somatic.vcf
   
 ```
 
@@ -824,7 +829,7 @@ $VARDICT_HOME/bin/VarDict \
   -G ${REF}/genome/Homo_sapiens.GRCh37.fa \
   -N tumor_pair \
   -b "alignment/tumor/tumor.sorted.dup.recal.bam|alignment/normal/normal.sorted.dup.recal.bam"  \
-  -C -Q 10 -c 1 -S 2 -E 3 -g 4 -th 3 \
+  -C -Q 10 -c 1 -S 2 -E 3 -g 4 -th 3 vardict,bed \
   | $VARDICT_BIN/testsomatic.R   \
   | $VARDICT_BIN/var2vcf_paired.pl -N "TUMOR|NORMAL" -f 0.05 > pairedVariants/vardict.vcf
   
@@ -849,7 +854,7 @@ less pairedVariants/mutect2.snp.somatic.vcf
 less pairedVariants/vardict.snp.somatic.vcf
 ```
 
-**could you notice something from these vcf files ?** [Solution](solutions/_vcf1.md)
+**Could you notice something from these vcf files ?** [Solution](solutions/_vcf1.md)
 
 
 Details on the spec can be found here:
@@ -867,7 +872,7 @@ Some values are are almost always there:
 
 Choosing the best caller is not an easy task each of them have their pros and cons. Now new methods have been developped to extract the best information from a multiple set of variant caller. These methods refer to the ensemble approach (as developped in bcbio.variation or somaticSeq) and rely on pre-selecting a subset of variants from the interesect of multiple caller and then apply Machine Learning approach to filter the high quality variants.
 
-As we don't have enough variant for the full ensemble approach we will just launch the initial step in order to generate a unifed callset form all the call found in at least 2 different caller:
+As we don't have enough variant for the full ensemble approach we will just launch the initial step in order to generate a unifed callset form all the call found in at least 2 different variant callers:
 
 ```{.bash}
 # Unified callset
