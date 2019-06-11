@@ -1,5 +1,7 @@
 
-docker run --privileged -v /tmp:/tmp --network host -it -w $PWD -v $HOME:$HOME --user $UID:$GROUPS -v /etc/group:/etc/group  -v /etc/passwd:/etc/passwd  c3genomics/genpipes:0.8
+docker run --privileged -v /tmp:/tmp --network host -it -w $PWD -v $HOME:$HOME \
+--user $UID:$GROUPS -v /etc/group:/etc/group  -v /etc/passwd:/etc/passwd \
+-v /etc/fonts/:/etc/fonts/  c3genomics/genpipes:0.8
 
 
 export REF=$MUGQIC_INSTALL_HOME/genomes/species/Homo_sapiens.GRCh37/
@@ -9,7 +11,20 @@ cd $HOME/ebicancerworkshop2019/SNV
 
 
 
-module load mugqic/java/openjdk-jdk1.8.0_72 mugqic/bvatools/1.6 mugqic/trimmomatic/0.36 mugqic/samtools/1.9 mugqic/bwa/0.7.17 mugqic/GenomeAnalysisTK/4.1.0.0 mugqic/R_Bioconductor/3.5.0_3.7mugqic/VarScan/2.4.3 mugqic/vcftools/0.1.14 mugqic/bcftools/1.9 mugqic/VarDictJava/1.4.9 mugqic/bcbio.variation.recall/0.1.7 mugqic/snpEff/4.3 mugqic/igvtools/2.3.67
+module load mugqic/java/openjdk-jdk1.8.0_72 \
+   mugqic/bvatools/1.6 \
+   mugqic/trimmomatic/0.36 \
+   mugqic/samtools/1.9 \
+   mugqic/bwa/0.7.17 \
+   mugqic/GenomeAnalysisTK/4.1.0.0 \
+   mugqic/R_Bioconductor/3.5.0_3.7 \
+   mugqic/VarScan/2.4.3 \
+   mugqic/vcftools/0.1.14 \
+   mugqic/bcftools/1.9 \
+   mugqic/VarDictJava/1.4.9 \
+   mugqic/bcbio.variation.recall/0.1.7 \
+   mugqic/snpEff/4.3 \
+   mugqic/igvtools/2.3.67
 
 
 
@@ -28,7 +43,7 @@ zgrep -c "^@" raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz
 
 
 # Generate original QC
-mkdir originalQC/
+mkdir -p originalQC/
 java -Xmx1G -jar ${BVATOOLS_JAR} readsqc --quality 64 \
   --read1 raw_reads/normal/run62DVGAAXX_1/normal.64.pair1.fastq.gz \
   --read2 raw_reads/normal/run62DVGAAXX_1/normal.64.pair2.fastq.gz \
@@ -176,7 +191,7 @@ java -Xmx2G -jar ${GATK_JAR}  MarkDuplicates \
   --METRICS_FILE alignment/tumor/tumor.sorted.dup.metrics
 
 
-^#less alignment/normal/normal.sorted.dup.metrics
+#less alignment/normal/normal.sorted.dup.metrics
 
 
 # Recalibrate
@@ -218,8 +233,8 @@ java  -Xmx2G -jar ${GATK_JAR} CalculateContamination \
    -O contamination.table
 
 
-^#less TumorPair.concordance.tsv
-^#less TumorPair.contamination.tsv
+#less TumorPair.concordance.tsv
+#less TumorPair.contamination.tsv
 
 
 # Get Depth
@@ -247,8 +262,8 @@ done
 module unload mugqic/GenomeAnalysisTK/3.8
 module load  mugqic/GenomeAnalysisTK/4.1.0.0
 
-^#less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
-^#less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
+#less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
+#less -S alignment/tumor/tumor.sorted.dup.recal.coverage.sample_interval_summary
 
 
 # Get insert size
@@ -263,8 +278,8 @@ do
 done
 
 
-^#less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
-^#less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
+#less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
+#less -S alignment/tumor/tumor.sorted.dup.recal.metric.insertSize.tsv
 
 
 # Get alignment metrics
@@ -278,8 +293,8 @@ do
 done
 
 
-^#less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
-^#less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
+#less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
+#less -S alignment/tumor/tumor.sorted.dup.recal.metric.alignment.tsv
 
 
 mkdir pairedVariants
@@ -347,9 +362,9 @@ bcftools filter \
    { if(substr($0,0,1) == "#" || length($4) == length($5)) {if(substr($0,0,2) != "##") \
    {t=$10; $10=$11; $11=t} ; print}} ' > pairedVariants/vardict.snp.somatic.vcf
 
-^#less pairedVariants/varscan2.snp.somatic.vcf
-^#less pairedVariants/mutect2.snp.somatic.vcf
-^#less pairedVariants/vardict.snp.somatic.vcf
+#less pairedVariants/varscan2.snp.somatic.vcf
+#less pairedVariants/mutect2.snp.somatic.vcf
+#less pairedVariants/vardict.snp.somatic.vcf
 
 # Unified callset
 bcbio-variation-recall ensemble \
@@ -374,7 +389,7 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   pairedVariants/ensemble.snp.somatic.vcf.gz \
   > pairedVariants/ensemble.snp.somatic.snpeff.vcf
 
-^#less -S pairedVariants/ensemble.snp.somatic.snpeff.vcf
+#less -S pairedVariants/ensemble.snp.somatic.snpeff.vcf
 
 # Coverage Track
 for i in normal tumor
