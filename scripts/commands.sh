@@ -5,7 +5,7 @@ docker run --privileged -v /tmp:/tmp --network host -it -w $PWD -v $HOME:$HOME -
 export REF=$MUGQIC_INSTALL_HOME/genomes/species/Homo_sapiens.GRCh37/
 
 
-cd $HOME/ebicancerworkshop2020/SNV
+cd $HOME/ebicancerworkshop2021/SNV
 
 
 
