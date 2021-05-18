@@ -171,7 +171,7 @@ All the generated graphics have their uses. But 3 of them are particularly usefu
         - The Box plot shows the quality distribution of your data.
  
 The quality of a base is computated using the Phread quality score.
-[notes](notes/_fastQC1.md) 
+[notes](notes/_fastqQC1.md) 
 
 
 The quality of a base is computated using the Phread quality score.
