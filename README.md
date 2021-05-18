@@ -518,7 +518,7 @@ Dupliate reads number are estimated separately for each library.
  
 **Why is this important to do not combine everything ?** [Solution](solutions/_markdup5.md)
 
-[Note on Duplicate rate](notes/_marduop1.md)
+[Note on Duplicate rate](notes/_markdup1.md)
 
 ## Base Quality recalibration
 **Why do we need to recalibrate base quality scores ?** [Solution](solutions/_recal1.md)
