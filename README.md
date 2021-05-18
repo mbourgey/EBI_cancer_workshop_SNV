@@ -814,7 +814,7 @@ java -Xmx2G -jar ${GATK_JAR} FilterMutectCalls \
    --contamination-table contamination.table \
    -O pairedVariants/mutect2.filtered.vcf
 
-vcftools --vcf pairedVariants/mutect2.vcf 
+vcftools --vcf pairedVariants/mutect2.vcf \
    --stdout --remove-indels --recode \
    | sed -e "s|normal|NORMAL|g" -e "s|tumor|TUMOR|g"  \
    >  pairedVariants/mutect2.snp.somatic.vcf
