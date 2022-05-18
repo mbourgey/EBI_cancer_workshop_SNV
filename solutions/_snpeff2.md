@@ -4,4 +4,4 @@ There is many tools you can use to  explore vcf (vcftools, GEMIN ...) but for su
 grep "HIGH\|MODERATE"  pairedVariants/ensemble.snp.somatic.snpeff.vcf | less
 ```
 
-there is actually only 1 somatic variants with high impact
+There is actually only 1 somatic variants with high impact and 2 variant with moderate impact.

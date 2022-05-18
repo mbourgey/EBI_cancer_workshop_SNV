@@ -25,15 +25,18 @@ For practical reasons we subsampled the reads from the sample because running th
 ### Environment setup
 ```{.bash}
 
-docker run --privileged -v /tmp:/tmp --network host -it -w $PWD -v $HOME:$HOME \
---user $UID:$GROUPS -v /etc/group:/etc/group  -v /etc/passwd:/etc/passwd \
--v /etc/fonts/:/etc/fonts/  c3genomics/genpipes:0.8
+docker run --privileged -v /tmp:/tmp --network host -it \
+    -w $PWD -v $HOME:$HOME -v /etc/fonts/:/etc/fonts/ \
+    -v $HOME/cvmfs_caches/:/cvmfs-cache/ c3genomics/genpipes:v2.1.0
 
+    
+module purge
 
-export REF=$MUGQIC_INSTALL_HOME/genomes/species/Homo_sapiens.GRCh37/
+export REF=$MUGQIC_INSTALL_HOME/genomes/species/Homo_sapiens.GRCh38/
 
+mkdir -p $HOME/ebicancerworkshop2022/SNV
 
-cd $HOME/ebicancerworkshop2019/SNV
+cd $HOME/ebicancerworkshop2022/SNV
 
 
 ```
@@ -62,12 +65,13 @@ module load mugqic/java/openjdk-jdk1.8.0_72 \
    mugqic/trimmomatic/0.36 \
    mugqic/samtools/1.9 \
    mugqic/bwa/0.7.17 \
-   mugqic/GenomeAnalysisTK/4.1.0.0 \
+   mugqic/GenomeAnalysisTK/4.1.2.0 \
    mugqic/R_Bioconductor/3.5.0_3.7 \
    mugqic/VarScan/2.4.3 \
    mugqic/vcftools/0.1.14 \
    mugqic/bcftools/1.9 \
    mugqic/VarDictJava/1.4.9 \
+   mugqic/perl/5.22.1 \
    mugqic/bcbio.variation.recall/0.1.7 \
    mugqic/snpEff/4.3 \
    mugqic/igvtools/2.3.67
@@ -89,6 +93,7 @@ The initial structure of your folders should look like this:
 |-- scripts                  # cheat sheet folder
 |-- adapters.fa              # fasta file containing the adapter used for sequencing
 ```
+
 
 
 ### Cheat file
@@ -169,7 +174,7 @@ All the generated graphics have their uses. But 3 of them are particularly usefu
         - The Box plot shows the quality distribution of your data.
  
 The quality of a base is computated using the Phread quality score.
-[notes](notes/_fastQC1.md) 
+[notes](notes/_fastqQC1.md) 
 
 
 The quality of a base is computated using the Phread quality score.
@@ -249,7 +254,6 @@ Exercice:
 
 **How does it look now ?** [Solution](solutions/_trim3.md)
 
-__TO DO: check for trimming with sliding windows__
 
 
 # Alignment
@@ -257,7 +261,7 @@ The raw reads are now cleaned up of artefacts we can align each lane separatly.
 
 **Why should this be done separatly?** [Solution](solutions/_aln1.md)
 
-**Why is it important to set Read Group information ?** [Solution](solutions_aln2.md)
+**Why is it important to set Read Group information ?** [Solution](solutions/_aln2.md)
 
 ##Alignment with bwa-mem
 
@@ -274,13 +278,13 @@ do
 
   mkdir -p $OUTPUT_DIR;
 
-  bwa mem -M -t 3 \
+  bwa mem -M -t 5 \
     -R "@RG\\tID:${SNAME}_${RUNID}_${LANE}\\tSM:${SNAME}\\t\
-LB:${SNAME}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMINA" \
-    ${REF}/genome/bwa_index/Homo_sapiens.GRCh37.fa \
+LB:${RUNID}\\tPU:${RUNID}_${LANE}\\tCN:Centre National de Genotypage\\tPL:ILLUMINA" \
+    ${REF}/genome/bwa_index/Homo_sapiens.GRCh38.fa \
     $file \
     ${file%.pair1.fastq.gz}.pair2.fastq.gz \
-  | java -Xmx2G -jar ${GATK_JAR}  SortSam \
+  | java -Xmx6G -jar ${GATK_JAR}  SortSam \
     -I /dev/stdin \
     -O ${OUTPUT_DIR}/${SNAME}.sorted.bam \
     --CREATE_INDEX true --SORT_ORDER coordinate --MAX_RECORDS_IN_RAM 500000
@@ -354,11 +358,10 @@ samtools view -H alignment/normal/normal.sorted.bam | grep "^@RG"
 
 You should have your 9 read group entries.
 
-**Why did we use the -H switch? ** [Solution](solutions/_merge1.md)
+**Why did we use the -H switch?** [Solution](solutions/_merge1.md)
 
 **Try without. What happens?** [Solution](solutions/_merge2.md)
 
-[lane merging note](notes/_merge1.md)
 
 ## SAM/BAM exploration
 Let's spend some time to explore bam files.
@@ -434,15 +437,15 @@ module load mugqic/GenomeAnalysisTK/3.8
 
 java -Xmx2G  -jar ${GATK_JAR} \
   -T RealignerTargetCreator \
-  -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
+  -R ${REF}/genome/Homo_sapiens.GRCh38.fa \
   -o alignment/normal/realign.intervals \
   -I alignment/normal/normal.sorted.bam \
   -I alignment/tumor/tumor.sorted.bam \
-  -L 9
+  -L chr9
 
 java -Xmx2G -jar ${GATK_JAR} \
   -T IndelRealigner \
-  -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
+  -R ${REF}/genome/Homo_sapiens.GRCh38.fa \
   -targetIntervals alignment/normal/realign.intervals \
   --nWayOut .realigned.bam \
   -I alignment/normal/normal.sorted.bam \
@@ -457,7 +460,7 @@ module unload mugqic/GenomeAnalysisTK/3.8
 module load  mugqic/GenomeAnalysisTK/4.1.0.0
   
 ```
-**Why did we use both normal and tumor together? ** [Solution](solutions/_realign3.md)
+**Why did we use both normal and tumor together?** [Solution](solutions/_realign3.md)
 
 **How could we make this go faster ?** [Solution](solutions/_realign1.md)
 
@@ -514,19 +517,20 @@ less alignment/normal/normal.sorted.dup.metrics
 
 **How many duplicates were there ?** [Solution](solutions/_markdup4.md)
 
-We can see that it computed separate measures for each library.
+Dupliate reads number are estimated separately for each library.
  
 **Why is this important to do not combine everything ?** [Solution](solutions/_markdup5.md)
 
-[Note on Duplicate rate](notes/_marduop1.md)
+[Note on Duplicate rate](notes/_markdup1.md)
 
 ## Base Quality recalibration
 **Why do we need to recalibrate base quality scores ?** [Solution](solutions/_recal1.md)
 
 
-It runs in 2 steps, 
-1- Build covariates based on context and known snp sites
-2- Correct the reads based on these metrics
+It runs in 2 steps:
+
+    1 - Build covariates based on context and known snp sites
+    2 - Correct the reads based on these metrics
 
 
 GATK BaseRecalibrator:
@@ -569,9 +573,10 @@ It tells you if your library worked
 It tells you if your sample and you reference fit together
 
 ## Estimate Normal/tumor contamination
-To estimate these metrics we will use the GATK tool. This run in 2 steps:
- 1 - Generate GATK pileup tables
- 2 - Estimate contamination
+To estimate these metrics we will use the GATK tool. This run in 2 steps:  
+
+    1 - Generate GATK pileup tables
+    2 - Estimate contamination
 
 
 ```{.bash}
@@ -597,15 +602,14 @@ java  -Xmx2G -jar ${GATK_JAR} CalculateContamination \
 
 ```
 
-Look at the concordance and contamination metrics file
+Look at the contamination result file
 
 ```{.bash}
-less TumorPair.concordance.tsv
-less TumorPair.contamination.tsv
+less contamination.table
 
 ```
 
-**What do you think about these estimations ?** [solution](solutions/_Conpair.md)
+**What do you think about this estimation ?** [solution](solutions/_conta.md)
 
 ## Compute coverage
 Both GATK and BVATools have depth of coverage tools. 
@@ -640,7 +644,7 @@ module load  mugqic/GenomeAnalysisTK/4.1.0.0
 ```
 [note on DepthOfCoverage command](notes/_DOC.md)
 
-Coverage is the expected ~70-110x in these project
+In this project the expected coverages are : ~40x for the normal and ~50x for the tumor
 
 Look at the coverage:
 
@@ -734,7 +738,7 @@ https://www.biostars.org/p/19104/
 In our case, let's start with:
 
 ```{.bash}
-mkdir pairedVariants
+mkdir -p pairedVariants
 
 ```
 
@@ -775,7 +779,7 @@ java -Xmx2G -jar ${VARSCAN2_JAR} somatic \
    pairedVariants/varscan2 \
    --output-vcf 1 \
    --strand-filter 1 \
-   --somatic-p-value 0.001 
+   --somatic-p-value 0.05 
 
 ```
 
@@ -813,7 +817,10 @@ java -Xmx2G -jar ${GATK_JAR} FilterMutectCalls \
    --contamination-table contamination.table \
    -O pairedVariants/mutect2.filtered.vcf
 
-vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --recode | sed -e "s|normal|NORMAL|g" -e "s|tumor|TUMOR|g"  >  pairedVariants/mutect2.snp.somatic.vcf
+vcftools --vcf pairedVariants/mutect2.vcf \
+   --stdout --remove-indels --recode \
+   | sed -e "s|normal|NORMAL|g" -e "s|tumor|TUMOR|g"  \
+   >  pairedVariants/mutect2.snp.somatic.vcf
   
 ```
 
@@ -821,12 +828,13 @@ vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --recode | se
 ## Vardict
 
 ```{.bash}
-$VARDICT_HOME/bin/VarDict \
+java -Xmx6G -classpath $VARDICT_HOME/lib/VarDict-1.4.9.jar:$VARDICT_HOME/lib/commons-cli-1.2.jar:$VARDICT_HOME/lib/jregex-1.2_01.jar:$VARDICT_HOME/lib/htsjdk-2.8.0.jar com.astrazeneca.vardict.Main \
   -G ${REF}/genome/Homo_sapiens.GRCh37.fa \
   -N tumor_pair \
   -b "alignment/tumor/tumor.sorted.dup.recal.bam|alignment/normal/normal.sorted.dup.recal.bam"  \
-  -C -Q 10 -c 1 -S 2 -E 3 -g 4 -th 3 \
-  | $VARDICT_BIN/testsomatic.R   \
+  -Q 10 -f 0.05 -c 1 -S 2 -E 3 -g 4 -th 3 \
+  -R 9:130215000-130636000 \
+  | $VARDICT_BIN/testsomatic.R \
   | $VARDICT_BIN/var2vcf_paired.pl -N "TUMOR|NORMAL" -f 0.05 > pairedVariants/vardict.vcf
   
 ```
@@ -850,7 +858,7 @@ less pairedVariants/mutect2.snp.somatic.vcf
 less pairedVariants/vardict.snp.somatic.vcf
 ```
 
-**could you notice something from these vcf files ?** [Solution](solutions/_vcf1.md)
+**Could you notice something from these vcf files ?** [Solution](solutions/_vcf1.md)
 
 
 Details on the spec can be found here:
@@ -868,7 +876,7 @@ Some values are are almost always there:
 
 Choosing the best caller is not an easy task each of them have their pros and cons. Now new methods have been developped to extract the best information from a multiple set of variant caller. These methods refer to the ensemble approach (as developped in bcbio.variation or somaticSeq) and rely on pre-selecting a subset of variants from the interesect of multiple caller and then apply Machine Learning approach to filter the high quality variants.
 
-As we don't have enough variant for the full ensemble approach we will just launch the initial step in order to generate a unifed callset form all the call found in at least 2 different caller:
+As we don't have enough variant for the full ensemble approach we will just launch the initial step in order to generate a unifed callset form all the call found in at least 2 different variant callers:
 
 ```{.bash}
 # Unified callset

@@ -7,10 +7,11 @@ docker run --privileged -v /tmp:/tmp --network host -it -w $PWD -v $HOME:$HOME \
 export REF=$MUGQIC_INSTALL_HOME/genomes/species/Homo_sapiens.GRCh37/
 
 
-cd $HOME/ebicancerworkshop2019/SNV
+cd $HOME/ebicancerworkshop2021/SNV
 
 
 
+<<<<<<< HEAD
 module load mugqic/java/openjdk-jdk1.8.0_72 \
    mugqic/bvatools/1.6 \
    mugqic/trimmomatic/0.36 \
@@ -25,6 +26,9 @@ module load mugqic/java/openjdk-jdk1.8.0_72 \
    mugqic/bcbio.variation.recall/0.1.7 \
    mugqic/snpEff/4.3 \
    mugqic/igvtools/2.3.67
+=======
+module load mugqic/java/openjdk-jdk1.8.0_72 mugqic/bvatools/1.6 mugqic/trimmomatic/0.36 mugqic/samtools/1.9 mugqic/bwa/0.7.17 mugqic/GenomeAnalysisTK/4.1.0.0 mugqic/R_Bioconductor/3.5.0_3.7 mugqic/VarScan/2.4.3 mugqic/vcftools/0.1.14 mugqic/bcftools/1.9 mugqic/VarDictJava/1.4.9 mugqic/bcbio.variation.recall/0.1.7 mugqic/snpEff/4.3 mugqic/igvtools/2.3.67 mugqic/perl/5.22.1
+>>>>>>> 40ebddd2e0f51e7cc260692021a7bd6ef87fa88e
 
 
 
@@ -346,11 +350,12 @@ java -Xmx2G -jar ${GATK_JAR} FilterMutectCalls \
 vcftools --vcf pairedVariants/mutect2.vcf --stdout --remove-indels --recode | sed -e "s|normal|NORMAL|g" -e "s|tumor|TUMOR|g"  >  pairedVariants/mutect2.snp.somatic.vcf
   
 
-$VARDICT_HOME/bin/VarDict \
+java -classpath $VARDICT_HOME/lib/VarDict-1.4.9.jar:$VARDICT_HOME/lib/commons-cli-1.2.jar:$VARDICT_HOME/lib/jregex-1.2_01.jar:$VARDICT_HOME/lib/htsjdk-2.8.0.jar com.astrazeneca.vardict.Main \
   -G ${REF}/genome/Homo_sapiens.GRCh37.fa \
   -N tumor_pair \
   -b "alignment/tumor/tumor.sorted.dup.recal.bam|alignment/normal/normal.sorted.dup.recal.bam"  \
-  -C -Q 10 -c 1 -S 2 -E 3 -g 4 -th 3 \
+  -Q 10 -f 0.05 -c 1 -S 2 -E 3 -g 4 -th 3 \
+  -R 9:130215000-130636000 \
   | $VARDICT_BIN/testsomatic.R   \
   | $VARDICT_BIN/var2vcf_paired.pl -N "TUMOR|NORMAL" -f 0.05 > pairedVariants/vardict.vcf
   
