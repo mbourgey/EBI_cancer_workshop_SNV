@@ -887,7 +887,7 @@ As we don't have enough variant for the full ensemble approach we will just laun
 bcbio-variation-recall ensemble \
   --cores 2 --numpass 2 --names mutect2,varscan2,vardict \
   pairedVariants/ensemble.snp.somatic.vcf.gz \
-  ${REF}/genome/Homo_sapiens.GRCh37.fa \
+  ${REF}/genome/Homo_sapiens.GRCh38.fa \
   pairedVariants/mutect2.snp.somatic.vcf \
   pairedVariants/varscan2.snp.somatic.vcf \
   pairedVariants/vardict.snp.somatic.vcf
@@ -917,7 +917,7 @@ java  -Xmx6G -jar ${SNPEFF_HOME}/snpEff.jar \
   -o vcf \
   -i vcf \
   -stats pairedVariants/ensemble.snp.somatic.snpeff.stats.html \
-  GRCh37.75 \
+  GRCh38.86 \
   pairedVariants/ensemble.snp.somatic.vcf.gz \
   > pairedVariants/ensemble.snp.somatic.snpeff.vcf
 ```
@@ -977,7 +977,7 @@ do
     -f min,max,mean \
     alignment/${i}/${i}.sorted.dup.recal.bam \
     alignment/${i}/${i}.sorted.dup.recal.bam.tdf \
-    b37
+    ${REF}/genome/Homo_sapiens.GRCh38.fa
 done
 ```
 
