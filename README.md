@@ -540,14 +540,14 @@ GATK BaseRecalibrator:
 for i in normal tumor
 do
   java -Xmx2G -jar ${GATK_JAR} BaseRecalibrator \
-    -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
-    --known-sites ${REF}/annotations/Homo_sapiens.GRCh37.dbSNP150.vcf.gz \
-    -L 9:130215000-130636000 \
+    -R ${REF}/genome/Homo_sapiens.GRCh38.fa \
+    --known-sites ${REF}/annotations/Homo_sapiens.GRCh38.dbSNP142.vcf.gz \
+    -L chr9:127452721-127873721 \
     -O alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -I alignment/${i}/${i}.sorted.dup.bam
 
     java -Xmx2G -jar ${GATK_JAR} ApplyBQSR \
-      -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
+      -R ${REF}/genome/Homo_sapiens.GRCh38.fa \
       -bqsr alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
       -O alignment/${i}/${i}.sorted.dup.recal.bam \
       -I alignment/${i}/${i}.sorted.dup.bam
@@ -583,15 +583,15 @@ To estimate these metrics we will use the GATK tool. This run in 2 steps:
 #Pileup table for the tumor sample
 java  -Xmx2G -jar ${GATK_JAR} GetPileupSummaries \
    -I alignment/tumor/tumor.sorted.dup.recal.bam \
-   -V $REF/annotations/Homo_sapiens.GRCh37.gnomad.exomes.r2.0.1.sites.no-VEP.nohist.tidy.vcf.gz \
-   -L 9:130215000-130636000 \
+   -V $REF/annotations/Homo_sapiens.GRCh38.1000G_phase1.snps.high_confidence.vcf.gz \
+   -L chr9:127452721-127873721 \
    -O alignment/tumor/tumor.pileups.table
 
 #Pileup table for the normal sample 
 java  -Xmx2G -jar ${GATK_JAR} GetPileupSummaries \
    -I alignment/normal/normal.sorted.dup.recal.bam \
-   -V $REF/annotations/Homo_sapiens.GRCh37.gnomad.exomes.r2.0.1.sites.no-VEP.nohist.tidy.vcf.gz \
-   -L 9:130215000-130636000 \
+   -V $REF/annotations/Homo_sapiens.GRCh38.1000G_phase1.snps.high_confidence.vcf.gz \
+   -L chr9:127452721-127873721 \
    -O alignment/normal/normal.pileups.table
 
 #Esitmate contamination
@@ -632,10 +632,10 @@ do
     --summaryCoverageThreshold 50 \
     --summaryCoverageThreshold 100 \
     --start 1 --stop 500 --nBins 499 -dt NONE \
-    -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
+    -R ${REF}/genome/Homo_sapiens.GRCh38.fa \
     -o alignment/${i}/${i}.sorted.dup.recal.coverage \
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
-    -L 9:130215000-130636000 
+    -L chr9:127452721-127873721 
 done
 
 #return to GATK 4
@@ -668,11 +668,12 @@ These metrics are computed using Picard:
 for i in normal tumor
 do
   java -Xmx2G -jar ${GATK_JAR}  CollectInsertSizeMetrics \
-    -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
+    -R ${REF}/genome/Homo_sapiens.GRCh38.fa \
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -O alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.tsv \
     -H alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.histo.pdf \
-    --METRIC_ACCUMULATION_LEVEL LIBRARY
+    --METRIC_ACCUMULATION_LEVEL LIBRARY \
+    -L chr9
 done
 
 ```
@@ -701,7 +702,7 @@ We prefer the Picard way of computing metrics:
 for i in normal tumor
 do
   java -Xmx2G -jar ${GATK_JAR}  CollectAlignmentSummaryMetrics \
-    -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
+    -R ${REF}/genome/Homo_sapiens.GRCh38.fa \
     -I alignment/${i}/${i}.sorted.dup.recal.bam \
     -O alignment/${i}/${i}.sorted.dup.recal.metric.alignment.tsv \
     --METRIC_ACCUMULATION_LEVEL LIBRARY
@@ -759,8 +760,8 @@ Varscan somatic caller expects both a normal and a tumor file in SAMtools pileup
 for i in normal tumor
 do
 samtools mpileup -B -q 1 \
-  -f ${REF}/genome/Homo_sapiens.GRCh37.fa \
-  -r 9:130215000-130636000 \
+  -f ${REF}/genome/Homo_sapiens.GRCh38.fa \
+  -r chr9:127452721-127873721 \
   alignment/${i}/${i}.sorted.dup.recal.bam \
   > pairedVariants/${i}.mpileup
 done
@@ -797,14 +798,14 @@ grep "^#\|SS=2" pairedVariants/varscan2.snp.vcf > pairedVariants/varscan2.snp.so
 ```{.bash}
 # Variants MuTecT2
 java -Xmx2G -jar ${GATK_JAR} Mutect2 \
-  -R ${REF}/genome/Homo_sapiens.GRCh37.fa \
+  -R ${REF}/genome/Homo_sapiens.GRCh38.fa \
   -I alignment/normal/normal.sorted.dup.recal.bam \
   -I alignment/tumor/tumor.sorted.dup.recal.bam \
   -normal normal \
   -tumor tumor \
-  --germline-resource $REF/annotations/Homo_sapiens.GRCh37.gnomad.exomes.r2.0.1.sites.no-VEP.nohist.tidy.vcf.gz \
+  --germline-resource $REF/annotations/Homo_sapiens.GRCh38.1000G_phase1.snps.high_confidence.vcf.gz \
   -O pairedVariants/mutect2.vcf \
-  -L 9:130215000-130636000
+  -L chr9:127452721-127873721
 
 ```
 
@@ -829,15 +830,17 @@ vcftools --vcf pairedVariants/mutect2.vcf \
 
 ```{.bash}
 java -Xmx6G -classpath $VARDICT_HOME/lib/VarDict-1.4.9.jar:$VARDICT_HOME/lib/commons-cli-1.2.jar:$VARDICT_HOME/lib/jregex-1.2_01.jar:$VARDICT_HOME/lib/htsjdk-2.8.0.jar com.astrazeneca.vardict.Main \
-  -G ${REF}/genome/Homo_sapiens.GRCh37.fa \
+  -G ${REF}/genome/Homo_sapiens.GRCh38.fa \
   -N tumor_pair \
   -b "alignment/tumor/tumor.sorted.dup.recal.bam|alignment/normal/normal.sorted.dup.recal.bam"  \
   -Q 10 -f 0.05 -c 1 -S 2 -E 3 -g 4 -th 3 \
-  -R 9:130215000-130636000 \
+  -R chr9:127452721-127873721 \
   | $VARDICT_BIN/testsomatic.R \
   | $VARDICT_BIN/var2vcf_paired.pl -N "TUMOR|NORMAL" -f 0.05 > pairedVariants/vardict.vcf
   
 ```
+Note on vardict parameters avaialble [here](notes/_Vardict.md)  
+
 
 Then we can extract somatic SNPs:
 
@@ -848,6 +851,7 @@ bcftools filter \
    | awk ' BEGIN {OFS="\t"} \
    { if(substr($0,0,1) == "#" || length($4) == length($5)) {if(substr($0,0,2) != "##") \
    {t=$10; $10=$11; $11=t} ; print}} ' > pairedVariants/vardict.snp.somatic.vcf
+
 ```
 
 Now we have somatic variants from all two methods. Let's look at the results. 

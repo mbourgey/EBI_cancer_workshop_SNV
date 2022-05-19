@@ -24,11 +24,11 @@ Here are some variants:
 
 Looks good but located in intron, so possibly no impact:   
 
-  * 9 130296899 
+  * chr9 127534620
 
 Called as somatic snp with high/moderate impact and looks real:   
 
-  * 9 130634110
+  * chr9 127871831
 
 
 We can see here, it is usually a good sign when several callers detect the mutation
