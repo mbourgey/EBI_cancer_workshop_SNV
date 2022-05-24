@@ -984,7 +984,7 @@ done
 Then:
  
    1. Open IGV
-   2. Chose the reference genome corresponding to those use for alignment (b37)
+   2. Chose the reference genome corresponding to those use for alignment (hg38)
    3. Load bam file
    4. Load vcf files
 
