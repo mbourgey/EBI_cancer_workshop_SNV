@@ -7,10 +7,12 @@
 module purge
 
 export REF=$MUGQIC_INSTALL_HOME/genomes/species/Homo_sapiens.GRCh38/
+export COURSE=/home/training/ebicancerworkshop2022
 
-mkdir -p $HOME/ebicancerworkshop2022/SNV
+mkdir -p $COURSE/SNV
 
-cd $HOME/ebicancerworkshop2022/SNV
+cd $COURSE/SNV
+
 
 
  
